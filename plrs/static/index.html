@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Personalized Learning Assistant</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --card: #ffffff; --text: #1d2330; --muted: #5f6878; --border: #dde1e8;
+    --accent: #2f6fdb; --accent-soft: #e6eefc; --good: #1f8a4c; --good-soft: #e3f4ea;
+    --warn: #b7791f; --warn-soft: #fbf1df; --bad: #c0392b; --bad-soft: #fbe6e3;
+    --bar-bg: #e9ecf1; --shadow: 0 1px 3px rgba(20, 30, 50, .08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b; --card: #1b2029; --text: #e6e9ef; --muted: #9aa3b2; --border: #2c3340;
+      --accent: #6b9cf0; --accent-soft: #1f2c44; --good: #4cc07e; --good-soft: #17301f;
+      --warn: #e0a64a; --warn-soft: #33291a; --bad: #ec7063; --bad-soft: #3a1f1c;
+      --bar-bg: #2a303b; --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 20px; }
+  header h1 { margin: 0; font-size: 19px; }
+  header p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  main { max-width: 1040px; margin: 0 auto; padding: 18px 16px 60px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+          padding: 18px; margin-bottom: 18px; box-shadow: var(--shadow); }
+  .card h2 { margin: 0 0 4px; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+  .step { display: inline-flex; width: 24px; height: 24px; border-radius: 50%; background: var(--accent);
+          color: #fff; font-size: 13px; align-items: center; justify-content: center; flex: none; }
+  .hint { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: 10px 0 14px; flex-wrap: wrap; }
+  .tab { background: none; border: none; border-bottom: 2px solid transparent; padding: 8px 12px;
+         color: var(--muted); cursor: pointer; font: inherit; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  input, select, textarea { font: inherit; color: var(--text); background: var(--card);
+         border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; }
+  button.btn { font: inherit; border: 1px solid var(--accent); background: var(--accent); color: #fff;
+         border-radius: 6px; padding: 7px 14px; cursor: pointer; }
+  button.btn.secondary { background: transparent; color: var(--accent); }
+  button.btn:disabled { opacity: .5; cursor: not-allowed; }
+  button.icon { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { border-bottom: 1px solid var(--border); padding: 6px; text-align: left; vertical-align: middle; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+  td input, td select { width: 100%; min-width: 60px; }
+  td.num input { width: 70px; }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+  .b-good { background: var(--good-soft); color: var(--good); }
+  .b-warn { background: var(--warn-soft); color: var(--warn); }
+  .b-bad  { background: var(--bad-soft);  color: var(--bad); }
+  .b-info { background: var(--accent-soft); color: var(--accent); }
+  .concept-row { display: grid; grid-template-columns: minmax(160px, 2fr) 3fr auto; gap: 12px;
+                 align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .concept-row:last-child { border-bottom: none; }
+  .bar { position: relative; height: 14px; background: var(--bar-bg); border-radius: 7px; }
+  .bar .fill { height: 100%; border-radius: 7px; transition: width .5s; }
+  .bar .mark { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--muted); }
+  .bar .mark span { position: absolute; top: 18px; left: -14px; font-size: 10px; color: var(--muted); white-space: nowrap; }
+  .meta { font-size: 12px; color: var(--muted); }
+  details.rec { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; }
+  details.rec summary { padding: 10px 14px; cursor: pointer; font-weight: 600; display: flex;
+                        justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  details.rec .body { padding: 0 16px 12px; }
+  details.rec h4 { margin: 14px 0 4px; font-size: 14px; color: var(--accent); }
+  details.rec ul { margin: 4px 0; padding-left: 20px; }
+  .rationale { background: var(--warn-soft); border-radius: 6px; padding: 8px 10px; }
+  .q { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin: 10px 0; }
+  .q p { margin: 0 0 6px; font-weight: 500; }
+  .q label { display: flex; gap: 8px; align-items: flex-start; padding: 4px 6px; border-radius: 5px; cursor: pointer; }
+  .q label:hover { background: var(--accent-soft); }
+  .q label.correct { background: var(--good-soft); }
+  .q label.wrong { background: var(--bad-soft); }
+  .q .expl { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .concept-eval { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; }
+  .concept-eval h3 { margin: 0 0 4px; font-size: 15px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .empty { color: var(--muted); font-style: italic; }
+  .hidden { display: none !important; }
+  #busy { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center;
+          justify-content: center; z-index: 10; }
+  #busy div { background: var(--card); padding: 18px 26px; border-radius: 10px; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--accent);
+             border-top-color: transparent; border-radius: 50%; animation: spin .8s linear infinite;
+             vertical-align: -3px; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #error { background: var(--bad-soft); color: var(--bad); border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; }
+  @media (max-width: 640px) {
+    .concept-row { grid-template-columns: 1fr; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Personalized Learning Assistant</h1>
+  <p id="status">Connecting to the server...</p>
+</header>
+
+<main>
+  <div id="error" class="hidden"></div>
+
+  <!-- 1. Input -->
+  <section class="card">
+    <h2><span class="step">1</span> Learner exam results</h2>
+    <p class="hint">Load a sample learner, upload an OBE results CSV, or type the marks in yourself. You can edit any row before analysing.</p>
+    <div class="tabs">
+      <button class="tab active" data-tab="sample">Sample learner</button>
+      <button class="tab" data-tab="upload">Upload CSV</button>
+      <button class="tab" data-tab="manual">Enter manually</button>
+    </div>
+    <div data-panel="sample" class="row">
+      <select id="sampleSelect" aria-label="Sample learner"></select>
+      <button class="btn secondary" id="loadSample">Load</button>
+    </div>
+    <div data-panel="upload" class="row hidden">
+      <input type="file" id="csvFile" accept=".csv">
+      <select id="csvLearner" class="hidden" aria-label="Learner in uploaded file"></select>
+      <span class="meta">Columns: learner_id, question_id, question_text, concept, difficulty, max_marks, marks</span>
+    </div>
+    <div data-panel="manual" class="row hidden">
+      <span class="meta">Add one row per exam question below.</span>
+    </div>
+
+    <div class="row" style="margin: 14px 0 8px">
+      <label>Learner ID <input id="learnerId" value="me" size="12"></label>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Concept</th><th>Question</th><th>Difficulty</th><th>Max</th><th>Marks</th><th></th></tr></thead>
+        <tbody id="recordRows"></tbody>
+      </table>
+    </div>
+    <div class="row" style="margin-top: 10px; justify-content: space-between">
+      <button class="btn secondary" id="addRow">+ Add row</button>
+      <button class="btn" id="analyzeBtn">Analyse &amp; get recommendations</button>
+    </div>
+  </section>
+
+  <!-- 2. Knowledge state -->
+  <section class="card hidden" id="stateCard">
+    <h2><span class="step">2</span> Knowledge state <span class="badge b-info" id="roundBadge">Round 1</span></h2>
+    <p class="hint">Mastery is estimated by the EKT knowledge-tracing model. Concepts below the OBE target are knowledge gaps.</p>
+    <div id="stateRows"></div>
+    <div id="history" class="hidden" style="margin-top: 16px">
+      <h4 style="margin: 0 0 6px">Progress across rounds</h4>
+      <div class="table-wrap"><table id="historyTable"></table></div>
+    </div>
+  </section>
+
+  <!-- 3. Recommendations -->
+  <section class="card hidden" id="recCard">
+    <h2><span class="step">3</span> Remedial recommendations</h2>
+    <p class="hint">A personalised study plan for every weak concept, cross-checked by the verifier models.</p>
+    <div id="recs"></div>
+  </section>
+
+  <!-- 4. Self-assessment -->
+  <section class="card hidden" id="evalCard">
+    <h2><span class="step">4</span> Self-assessment</h2>
+    <p class="hint">After studying the recommendations, take an adaptive test on your weak concepts:
+      Easy &rarr; Medium &rarr; Hard. You move up a level only when you pass the current one.</p>
+    <div class="row">
+      <label>Rule <input id="rule" size="8" title="questions per level and pass percentage, e.g. 5 and 80"></label>
+      <span class="meta">"questions per level and pass %", e.g. <code>5 and 80</code> or <code>1 and 100</code></span>
+      <button class="btn" id="startEval">Start self-assessment</button>
+    </div>
+    <div id="evalArea"></div>
+    <div class="row hidden" id="nextRoundRow" style="margin-top: 14px">
+      <button class="btn" id="nextRound">Update my knowledge state &rarr; next round</button>
+      <span class="meta">Your answers are added to your history and re-analysed.</span>
+    </div>
+  </section>
+</main>
+
+<div id="busy" class="hidden"><div><span class="spinner"></span><span id="busyText">Working...</span></div></div>
+
+<script>
+"use strict";
+const state = {
+  concepts: [], obe: { threshold: 50, target: 70 },
+  records: [], round: 1, history: [], gaps: [],
+  session: null, evalFinished: {},
+};
+
+// ---------------------------------------------------------------- helpers
+const $ = (id) => document.getElementById(id);
+function el(tag, attrs = {}, ...children) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") n.className = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else if (v !== undefined && v !== null && v !== false) n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of children.flat()) {
+    if (c === null || c === undefined || c === false) continue;
+    n.append(c instanceof Node ? c : document.createTextNode(String(c)));
+  }
+  return n;
+}
+function showError(msg) {
+  const box = $("error");
+  box.textContent = msg;
+  box.classList.toggle("hidden", !msg);
+  if (msg) box.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+async function api(path, options = {}, busyText = "Working...") {
+  $("busyText").textContent = busyText;
+  $("busy").classList.remove("hidden");
+  try {
+    const res = await fetch(path, options);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail ? (typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail)) : res.statusText);
+    return data;
+  } finally {
+    $("busy").classList.add("hidden");
+  }
+}
+const postJSON = (path, body, busy) =>
+  api(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }, busy);
+const pct = (x) => `${Math.round(x * 100)}%`;
+function levelBadge(level) {
+  const cls = { Expert: "b-good", Intermediate: "b-warn", Beginner: "b-bad", "Not Competent": "b-bad" }[level] || "b-info";
+  return el("span", { class: `badge ${cls}` }, level);
+}
+
+// ---------------------------------------------------------------- 1. input
+document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach((x) => x.classList.toggle("active", x === t));
+  document.querySelectorAll("[data-panel]").forEach((p) => p.classList.toggle("hidden", p.dataset.panel !== t.dataset.tab));
+  if (t.dataset.tab === "manual" && state.records.length === 0) addRow();
+}));
+
+function conceptSelect(value) {
+  const s = el("select", { "aria-label": "Concept" });
+  for (const c of state.concepts) s.append(el("option", { value: c.name, selected: c.name === value }, c.name));
+  if (value && !state.concepts.some((c) => c.name === value)) s.append(el("option", { value, selected: true }, value));
+  return s;
+}
+function renderRows() {
+  const body = $("recordRows");
+  body.replaceChildren();
+  if (state.records.length === 0) {
+    body.append(el("tr", {}, el("td", { colspan: 6, class: "empty" }, "No exam results yet.")));
+    return;
+  }
+  state.records.forEach((r, i) => {
+    const bind = (input, key, num) => input.addEventListener("change", () => { r[key] = num ? parseFloat(input.value) || 0 : input.value; });
+    const cs = conceptSelect(r.concept); bind(cs, "concept");
+    const qt = el("input", { value: r.question_text || "", placeholder: "question text" }); bind(qt, "question_text");
+    const df = el("select", {}, ...["easy", "medium", "hard"].map((d) => el("option", { value: d, selected: d === r.difficulty }, d)));
+    bind(df, "difficulty");
+    const mx = el("input", { type: "number", min: 0, step: 0.5, value: r.max_marks }); bind(mx, "max_marks", true);
+    const mk = el("input", { type: "number", min: 0, step: 0.5, value: r.marks }); bind(mk, "marks", true);
+    const exam = r.exam && r.exam.startsWith("SelfAssessment") ? el("div", { class: "meta" }, r.exam) : null;
+    body.append(el("tr", {},
+      el("td", {}, cs, exam), el("td", {}, qt), el("td", {}, df),
+      el("td", { class: "num" }, mx), el("td", { class: "num" }, mk),
+      el("td", {}, el("button", { class: "icon", title: "Remove row", onclick: () => { state.records.splice(i, 1); renderRows(); } }, "✕"))));
+  });
+}
+function addRow() {
+  state.records.push({ question_id: `M${state.records.length + 1}`, question_text: "",
+    concept: state.concepts[0] ? state.concepts[0].name : "", difficulty: "easy",
+    bloom_level: "", max_marks: 10, marks: 0, exam: "OBE" });
+  renderRows();
+}
+function setRecords(learnerId, records) {
+  $("learnerId").value = learnerId;
+  state.records = records.map((r) => ({ ...r }));
+  resetResults();
+  renderRows();
+}
+function resetResults() {
+  state.round = 1; state.history = []; state.session = null;
+  ["stateCard", "recCard", "evalCard"].forEach((id) => $(id).classList.add("hidden"));
+}
+
+$("addRow").addEventListener("click", addRow);
+$("loadSample").addEventListener("click", async () => {
+  try {
+    showError("");
+    const d = await api(`/sample-learners/${encodeURIComponent($("sampleSelect").value)}`, {}, "Loading learner...");
+    setRecords(d.learner_id, d.records);
+  } catch (e) { showError(e.message); }
+});
+let uploaded = {};
+$("csvFile").addEventListener("change", async (ev) => {
+  const file = ev.target.files[0];
+  if (!file) return;
+  try {
+    showError("");
+    const fd = new FormData(); fd.append("file", file);
+    uploaded = (await api("/results/upload", { method: "POST", body: fd }, "Reading CSV...")).learners;
+    const ids = Object.keys(uploaded);
+    if (!ids.length) throw new Error("The file contains no records.");
+    const sel = $("csvLearner");
+    sel.replaceChildren(...ids.map((id) => el("option", { value: id }, `${id} (${uploaded[id].length} answers)`)));
+    sel.classList.toggle("hidden", ids.length < 2);
+    setRecords(ids[0], uploaded[ids[0]]);
+  } catch (e) { showError(e.message); }
+});
+$("csvLearner").addEventListener("change", (ev) => setRecords(ev.target.value, uploaded[ev.target.value]));
+
+// ---------------------------------------------------------------- 2 + 3. analyse & recommend
+function learnerBody() {
+  const bad = state.records.find((r) => !r.concept || !(r.max_marks > 0) || r.marks < 0 || r.marks > r.max_marks);
+  if (bad) throw new Error("Every row needs a concept, max marks above 0, and marks between 0 and max.");
+  return { learner_id: $("learnerId").value.trim() || "me",
+           records: state.records.map((r, i) => ({ ...r, question_id: r.question_id || `M${i + 1}` })) };
+}
+async function analyse() {
+  showError("");
+  if (!state.records.length) return showError("Add at least one exam result first.");
+  let body;
+  try { body = learnerBody(); } catch (e) { return showError(e.message); }
+  try {
+    const a = await postJSON("/analyze", body, "Tracing your knowledge state...");
+    state.gaps = a.concepts.filter((c) => c.is_gap).map((c) => c.concept);
+    state.history.push({ round: state.round, mastery: Object.fromEntries(a.concepts.map((c) => [c.concept, c.mastery])) });
+    renderState(a.concepts);
+    const r = await postJSON(`/recommend?round_no=${state.round}`, body, "Writing your personalised recommendations...");
+    renderRecs(r.recommendations);
+    renderEvalIntro();
+    $("stateCard").scrollIntoView({ behavior: "smooth" });
+  } catch (e) { showError(e.message); }
+}
+$("analyzeBtn").addEventListener("click", () => { resetResults(); analyse(); });
+
+function renderState(concepts) {
+  $("stateCard").classList.remove("hidden");
+  $("roundBadge").textContent = `Round ${state.round}`;
+  const { threshold, target } = state.obe;
+  const rows = concepts.map((c) => {
+    const m = c.mastery * 100;
+    const color = m >= target ? "var(--good)" : m >= threshold ? "var(--warn)" : "var(--bad)";
+    return el("div", { class: "concept-row" },
+      el("div", {}, el("div", {}, c.concept),
+        el("div", { class: "meta" }, c.obe_score === null ? "not attempted in the exam" : `exam score ${c.obe_score.toFixed(1)}%`)),
+      el("div", { class: "bar", title: `mastery ${m.toFixed(1)}%` },
+        el("div", { class: "fill", style: `width:${Math.min(m, 100)}%;background:${color}` }),
+        el("div", { class: "mark", style: `left:${threshold}%` }, el("span", {}, `threshold ${threshold}%`)),
+        el("div", { class: "mark", style: `left:${target}%` }, el("span", {}, `target ${target}%`))),
+      el("div", { class: "row", style: "gap:6px;justify-content:flex-end" },
+        el("strong", {}, pct(c.mastery)), levelBadge(c.level),
+        c.is_gap ? el("span", { class: "badge b-bad" }, "gap") : el("span", { class: "badge b-good" }, "✓ target")));
+  });
+  $("stateRows").replaceChildren(...rows);
+  renderHistory();
+}
+function renderHistory() {
+  if (state.history.length < 2) { $("history").classList.add("hidden"); return; }
+  $("history").classList.remove("hidden");
+  const names = Object.keys(state.history[0].mastery);
+  $("historyTable").replaceChildren(
+    el("thead", {}, el("tr", {}, el("th", {}, "Concept"), ...state.history.map((h) => el("th", {}, `Round ${h.round}`)))),
+    el("tbody", {}, ...names.map((n) => el("tr", {}, el("td", {}, n),
+      ...state.history.map((h) => el("td", {}, h.mastery[n] === undefined ? "-" : pct(h.mastery[n])))))));
+}
+
+function renderRecs(recs) {
+  $("recCard").classList.remove("hidden");
+  const box = $("recs");
+  if (!recs.length) {
+    box.replaceChildren(el("p", {}, "🎉 No knowledge gaps: every concept is at or above the OBE target."));
+    return;
+  }
+  box.replaceChildren(...recs.map(({ recommendation: r }, i) => {
+    const list = (items) => el("ul", {}, ...(items || []).map((x) => el("li", {}, typeof x === "string" ? x : JSON.stringify(x))));
+    const topics = el("ol", {}, ...(r.topics_to_revise || []).map((t) => typeof t === "string" ? el("li", {}, t)
+      : el("li", {}, el("strong", {}, t.topic || ""), list(t.points))));
+    const practice = el("ul", {}, ...(r.practice_activities || []).map((a) => typeof a === "string" ? el("li", {}, a)
+      : el("li", {}, el("strong", {}, a.title || "Practice"), ": ", a.description || "",
+          (a.input || a.expected_output) ? el("div", { class: "meta" }, `Input: ${a.input || "-"} → Expected: ${a.expected_output || "-"}`) : null)));
+    const ver = r.verification && r.verification.avg_score != null
+      ? el("p", { class: "meta" }, `Cross-verified by ${Object.keys(r.verification.reviews || {}).join(", ")}: ${r.verification.avg_score.toFixed(1)}/5`) : null;
+    return el("details", { class: "rec", open: i === 0 },
+      el("summary", {}, el("span", {}, r.concept), el("span", { class: "meta" }, `current mastery ${pct(r.mastery)}`)),
+      el("div", { class: "body" },
+        el("h4", {}, "1. Learning objectives"), list(r.learning_objectives),
+        el("h4", {}, "2. Topics to revise"), topics,
+        el("h4", {}, "3. Explanation"), el("p", {}, r.remedial_explanation || ""),
+        el("h4", {}, "4. Practice activities"), practice,
+        el("h4", {}, "5. Why this was recommended"), el("p", { class: "rationale" }, r.concept_gap_rationale || ""),
+        ver));
+  }));
+}
+
+// ---------------------------------------------------------------- 4. adaptive self-assessment
+function renderEvalIntro() {
+  $("evalCard").classList.toggle("hidden", state.gaps.length === 0);
+  $("evalArea").replaceChildren(el("p", { class: "meta" }, `Concepts to be tested: ${state.gaps.join("; ")}`));
+  $("startEval").disabled = false;
+  $("nextRoundRow").classList.add("hidden");
+}
+$("startEval").addEventListener("click", async () => {
+  try {
+    showError("");
+    const d = await postJSON("/evaluation", { learner_id: $("learnerId").value || "me", concepts: state.gaps,
+      rule: $("rule").value.trim() || null }, "Generating your questions (RAG + cross-verification)...");
+    state.session = d.session_id; state.evalFinished = {};
+    $("startEval").disabled = true;
+    $("evalArea").replaceChildren(...state.gaps.map((c) => {
+      const box = el("div", { class: "concept-eval", id: `ev-${cssId(c)}` });
+      renderLevel(box, c, d.questions[c] || []);
+      return box;
+    }));
+  } catch (e) { showError(e.message); }
+});
+const cssId = (s) => s.replace(/[^a-z0-9]+/gi, "-");
+
+function renderLevel(box, concept, questions, previous = []) {
+  const header = el("h3", {}, concept);
+  if (!questions.length) {
+    state.evalFinished[concept] = true;
+    box.replaceChildren(header, ...previous, el("p", { class: "empty" }, "No questions available for this level."));
+    return checkAllDone();
+  }
+  header.append(el("span", { class: "badge b-info" }, `${questions[0].difficulty} · ${questions[0].bloom_level}`));
+  const qEls = questions.map((q, qi) => el("div", { class: "q", "data-id": q.id },
+    el("p", {}, `${qi + 1}. ${q.question}`),
+    ...q.options.map((o, oi) => el("label", {}, el("input", { type: "radio", name: `${q.id}`, value: oi }), el("span", {}, o)))));
+  const submit = el("button", { class: "btn", onclick: () => submitLevel(box, concept, questions, qEls, submit, previous) }, "Submit answers");
+  box.replaceChildren(header, ...previous, ...qEls, submit);
+}
+
+async function submitLevel(box, concept, questions, qEls, submit, previous) {
+  const answers = {};
+  for (const q of questions) {
+    const picked = box.querySelector(`input[name="${q.id}"]:checked`);
+    if (!picked) return showError(`Answer every question for "${concept}" before submitting.`);
+    answers[q.id] = parseInt(picked.value, 10);
+  }
+  try {
+    showError("");
+    const res = await postJSON(`/evaluation/${state.session}/answer`, { concept, answers }, "Grading...");
+    // show which answers were right
+    res.results.forEach((r) => {
+      const qEl = qEls.find((x) => x.dataset.id === r.id);
+      qEl.querySelectorAll("label").forEach((lab, oi) => {
+        lab.querySelector("input").disabled = true;
+        if (oi === r.answer) lab.classList.add("correct");
+        else if (oi === r.chosen) lab.classList.add("wrong");
+      });
+      if (r.explanation) qEl.append(el("div", { class: "expl" }, r.explanation));
+    });
+    submit.remove();
+    const summary = el("p", {}, el("strong", {}, `${res.level}: ${Math.round(res.percent)}% `),
+      el("span", { class: `badge ${res.passed ? "b-good" : "b-bad"}` }, res.passed ? "passed" : "not passed"),
+      " — current level: ", levelBadge(res.category));
+    const done = [...previous, el("details", {}, el("summary", {}, `${res.level} level (${Math.round(res.percent)}%) — show answers`), ...qEls), summary];
+    if (res.finished || !res.next_questions.length) {
+      state.evalFinished[concept] = true;
+      box.replaceChildren(el("h3", {}, concept, levelBadge(res.category)), ...done);
+      checkAllDone();
+    } else {
+      renderLevel(box, concept, res.next_questions, done);
+    }
+  } catch (e) { showError(e.message); }
+}
+function checkAllDone() {
+  if (state.gaps.every((c) => state.evalFinished[c])) $("nextRoundRow").classList.remove("hidden");
+}
+$("nextRound").addEventListener("click", async () => {
+  try {
+    const rep = await api(`/evaluation/${state.session}`, {}, "Collecting your answers...");
+    const tag = `SelfAssessment-R${state.round}`;
+    state.records.push(...rep.records.map((r) => ({ ...r, exam: tag })));
+    state.round += 1;
+    renderRows();
+    await analyse();
+  } catch (e) { showError(e.message); }
+});
+
+// ---------------------------------------------------------------- start-up
+(async function init() {
+  try {
+    const h = await api("/health", {}, "Connecting...");
+    state.obe = h.obe;
+    $("rule").value = h.default_rule || "5 and 80";
+    $("status").textContent = `Generator: ${h.primary_llm} · Verifiers: ${h.verifiers.join(", ")} · Knowledge tracing: ${h.kt_model ? h.kt_model.toUpperCase() : "not trained (raw OBE scores)"}`;
+  } catch (e) { $("status").textContent = "Server not reachable"; return showError(e.message); }
+  try { state.concepts = await api("/concepts", {}, "Loading concepts..."); }
+  catch (e) { showError(`${e.message} (run \`python -m plrs ingest <curriculum>\` first)`); }
+  try {
+    const ids = await api("/sample-learners", {}, "Loading sample learners...");
+    $("sampleSelect").replaceChildren(...ids.map((id) => el("option", { value: id }, id)));
+  } catch (e) {
+    $("sampleSelect").replaceChildren(el("option", {}, "no sample data"));
+    $("loadSample").disabled = true;
+  }
+  renderRows();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+# Central configuration for the AI-Driven Personalized Learning framework.
+# Values mirror the settings reported in the paper (Pradeesh et al., IEEE Access 2025).
+
+llm:
+  # Primary generator (paper Sec. V-A.1: OpenAI selected as primary engine)
+  primary: openai            # openai | gemini | deepseek | mock
+  # Secondary models used for cross-verification (paper Sec. III-D.3)
+  verifiers: [gemini, deepseek]
+  openai_model: gpt-4o-mini
+  gemini_model: gemini-1.5-flash
+  deepseek_model: deepseek-chat
+  temperature: 0.4
+  # If an API key is missing, the provider silently falls back to the offline mock.
+  fallback_to_mock: true
+
+rag:
+  chunk_size: 1000           # Appendix A: ~1000 chars
+  chunk_overlap: 100         # Appendix A: 100-char overlap
+  top_k: 4
+  embedding_model: sentence-transformers/all-MiniLM-L6-v2
+
+obe:
+  threshold: 50              # Sec. III-A.1: 50-60 %
+  target: 70                 # ~20 % above threshold
+
+mcq:
+  generation_multiplier: 3   # Appendix A: generate ~3x the required questions
+  dedup_threshold: 0.85      # Sec. III-D.1: cosine similarity cut-off
+  verification_min_score: 3  # min avg verifier score (1-5) to accept a question
+
+remedial:
+  max_refinement_rounds: 2
+  verification_min_score: 3
+
+evaluation:
+  # Instructor-defined rule per level: number of questions and pass percentage
+  # e.g. core course "5 and 80", optional course "1 and 100" (Sec. IV-A.4)
+  default_rule:
+    questions_per_level: 5
+    pass_percentage: 80
+
+ekt:
+  embedding_dim: 100         # Sec. V-B
+  hidden_dim: 100
+  dropout: 0.3
+  learning_rate: 0.001
+  batch_size: 32
+  epochs: 12
+  train_split: 0.75
+  max_seq_len: 200
+  use_attention: true        # EKTA variant (exercise-similarity attention)
+  exercise_dropout: 0.0      # >0 hides exercise text during training (robustness to unseen questions)
+
+paths:
+  store_dir: data/store
+  models_dir: data/models

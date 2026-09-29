@@ -1,0 +1,81 @@
+Course: Procedural Programming using C
+Program: B.Tech Computer Science and Engineering (Outcome-Based Education)
+
+Course Outcomes
+CO1: Explain the structure of a computer system and the process of building and running a C program.
+CO2: Use operators, pointers and control structures to implement correct program logic.
+CO3: Solve algorithmic problems using arrays, searching and sorting techniques.
+CO4: Manipulate strings and process text using the C standard library.
+CO5: Use structures, dynamic memory management and files to organise and persist data.
+
+Unit 1: Fundamentals and System Architecture
+A computer system consists of the CPU, main memory, secondary storage and input/output devices connected by buses.
+In the von Neumann architecture both instructions and data are stored in the same main memory.
+The CPU repeatedly fetches an instruction from memory, decodes it and executes it, which is called the instruction cycle.
+Registers are small, very fast storage locations inside the CPU that hold values currently being processed.
+A C source file is first processed by the preprocessor, which expands macros and includes header files.
+The compiler translates the preprocessed source code into assembly or object code for the target machine.
+The linker combines object files and library code into a single executable program.
+A program that compiles successfully can still fail at link time when a function is declared but never defined.
+Every C program starts executing from the main function, which returns an integer status to the operating system.
+The basic data types in C are char, int, float and double, and their sizes depend on the platform.
+Variables must be declared with a type before they are used, and uninitialised local variables contain garbage values.
+Standard input and output are performed with the scanf and printf functions declared in stdio.h.
+
+Unit 2: Operators, Pointers and Control Structures
+Arithmetic operators in C include addition, subtraction, multiplication, division and the modulus operator.
+Integer division truncates the fractional part, so 7 / 2 evaluates to 3 while 7 % 2 evaluates to 1.
+Relational operators compare two values and produce 1 for true and 0 for false.
+Logical operators such as && and || use short-circuit evaluation, so the right operand may not be evaluated.
+Modifying a variable twice in one expression without a sequence point, as in x += x++, is undefined behaviour.
+The if-else statement selects between two paths, and the switch statement selects among many constant cases.
+A break statement is needed at the end of each switch case to prevent execution from falling through to the next case.
+The for, while and do-while loops repeat a block of statements; a do-while loop always executes its body at least once.
+A pointer is a variable that stores the memory address of another variable.
+The address-of operator & gives the address of a variable, and the dereference operator * accesses the value at an address.
+Pointer arithmetic is scaled by the size of the pointed-to type, so incrementing an int pointer advances by sizeof(int) bytes.
+Dereferencing a NULL or uninitialised pointer causes undefined behaviour and usually a crash.
+Passing a pointer to a function lets the function modify the caller's variable, which is called call by reference.
+
+Unit 3: Algorithmic Problem Solving and Array Manipulation
+An algorithm is a finite sequence of well-defined steps that solves a problem, often written first as pseudocode.
+Problem solving begins by decomposing a problem into smaller steps before writing any code.
+An array stores a fixed number of elements of the same type in contiguous memory locations.
+Array elements in C are indexed from 0, so the last element of an array of size n has index n - 1.
+Accessing an array outside its bounds is not checked by C and leads to undefined behaviour.
+Traversal visits every element of an array using a loop over all valid indices.
+To find the largest element, assume the first element is the largest and compare it with every other element, updating the assumption when a bigger value is found.
+Linear search checks each element in turn and takes time proportional to the number of elements.
+Binary search repeatedly halves a sorted array and is much faster than linear search for large inputs.
+Inserting an element at a given position requires shifting all later elements one position to the right.
+Bubble sort repeatedly swaps adjacent elements that are out of order until the array is sorted.
+Selection sort repeatedly selects the smallest remaining element and places it at the front, using fewer swaps than bubble sort.
+The top three elements of an array can be found in a single pass by maintaining three running maxima.
+A two-dimensional array stores a matrix in row-major order in C.
+
+Unit 4: String Manipulation and Text Processing
+A string in C is an array of characters terminated by the null character '\0'.
+The functions strlen, strcpy, strcat and strcmp are declared in the header file string.h.
+strlen returns the number of characters before the terminating null character.
+Comparing two strings with == compares their addresses, so strcmp must be used to compare their contents.
+strcmp returns zero when two strings are equal, a negative value when the first is smaller and a positive value otherwise.
+Copying a string into a buffer that is too small causes a buffer overflow, so the destination must have room for the null character.
+The functions in ctype.h such as toupper, tolower, isalpha and isdigit classify and convert individual characters.
+Counting vowels in a string is done by traversing the characters until the null character and testing each one.
+A palindrome check compares characters from both ends of the string moving towards the middle.
+fgets reads a line of text safely because it limits the number of characters stored in the buffer.
+Text processing tasks such as word counting split a line into tokens separated by spaces or punctuation.
+
+Unit 5: Data Structures, Memory Management, and File Handling
+A structure groups related variables of different types under one name, for example a student record with a name and marks.
+Members of a structure are accessed with the dot operator, and through a pointer with the arrow operator.
+Local variables are allocated on the stack and are released automatically when the function returns.
+Dynamic memory is allocated on the heap with malloc or calloc and must be released explicitly with free.
+malloc returns NULL when the allocation fails, so the result must always be checked before use.
+A memory leak occurs when allocated memory is no longer referenced but has not been freed.
+A singly linked list is a sequence of nodes where each node stores data and a pointer to the next node.
+Inserting at the head of a linked list creates a new node, points it to the current head and makes it the new head.
+Files are opened with fopen, which returns a FILE pointer, and closed with fclose.
+The mode "r" opens a file for reading, "w" creates or truncates a file for writing and "a" appends to a file.
+fprintf and fscanf perform formatted output and input on files, while fread and fwrite handle binary data.
+Always check that fopen did not return NULL before reading from or writing to a file.

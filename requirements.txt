@@ -1,0 +1,33 @@
+# Core
+numpy>=1.26
+pandas>=2.1
+scipy>=1.11
+scikit-learn>=1.4
+pyyaml>=6.0
+python-dotenv>=1.0
+
+# Knowledge tracing (EKT / DKT)
+torch>=2.2
+
+# RAG: PDF loading, embeddings, vector store
+pypdf>=4.0
+sentence-transformers>=2.7      # all-MiniLM-L6-v2 (paper, Sec. V-A)
+faiss-cpu>=1.8                  # optional; numpy fallback is used when missing
+
+# Generative AI providers (all optional - a local "mock" provider works offline)
+openai>=1.30                    # OpenAI (primary) + DeepSeek (OpenAI-compatible API)
+google-generativeai>=0.7        # Gemini (cross-verification)
+
+# Metrics
+sacrebleu>=2.4                  # Self-BLEU diversity score
+
+# Serving (REST API: python -m plrs serve)
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9
+
+# Optional: saves the KT training curves (Fig. 4) as data/models/kt_curves.png
+matplotlib>=3.8
+
+# Tests
+pytest>=8.0
