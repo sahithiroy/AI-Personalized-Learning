@@ -53,3 +53,23 @@ def test_mock_mcq_shape(kb):
     assert len(qs) == 6
     for q in qs:
         assert len(q["options"]) == 4 and 0 <= q["answer"] < 4
+
+
+def test_fallback_switches_off_after_account_error():
+    from plrs.llm import FallbackProvider, LLM
+
+    class Broke(LLM):
+        name = "broke"
+        calls = 0
+
+        def generate(self, prompt, **kw):
+            Broke.calls += 1
+            raise RuntimeError("Error code: 402 - Insufficient Balance")
+
+    fb = FallbackProvider(Broke(), MockProvider("broke"))
+    for _ in range(3):
+        out = fb.generate_json("", task="verify_mcq",
+                               payload={"question": {"question": "What is x?", "options": ["a", "b", "c", "d"],
+                                                     "answer": 0, "difficulty": "easy", "bloom_level": "Remember"}})
+        assert "score" in out
+    assert Broke.calls == 1 and fb.disabled

@@ -105,25 +105,48 @@ class GeminiProvider(LLM):
 
 
 class FallbackProvider(LLM):
-    """Wraps a real provider; on any API error answers with the mock instead."""
+    """Wraps a real provider; on an API error answers with the mock instead.
+
+    Account-level errors (no credit, bad key, unknown model, no permission) will not fix themselves,
+    so after one of those the provider is switched off for the rest of the process instead of
+    paying a slow failed network call on every request.
+    """
+
+    PERMANENT = ("401", "402", "403", "404", "insufficient", "quota", "credit", "not found",
+                 "invalid api key", "permission")
 
     def __init__(self, inner: LLM, mock: "MockProvider"):
         self.inner, self.mock = inner, mock
-        self.name = inner.name
+        self.disabled = False
+
+    @property
+    def name(self) -> str:
+        return f"{self.inner.name} (unavailable, offline mock)" if self.disabled else self.inner.name
+
+    def _failed(self, exc: Exception) -> None:
+        text = str(exc).lower()
+        if any(k in text for k in self.PERMANENT):
+            self.disabled = True
+            log.warning("%s is unavailable (%s) - using the offline mock for the rest of this run",
+                        self.inner.name, str(exc)[:160])
+        else:
+            log.warning("%s call failed (%s); using offline mock for this call", self.inner.name, str(exc)[:160])
 
     def generate(self, prompt, *, task="", payload=None, **kw):
-        try:
-            return self.inner.generate(prompt, task=task, payload=payload, **kw)
-        except Exception as exc:  # network, quota, auth ...
-            log.warning("%s call failed (%s); using offline mock", self.inner.name, exc)
-            return self.mock.generate(prompt, task=task, payload=payload)
+        if not self.disabled:
+            try:
+                return self.inner.generate(prompt, task=task, payload=payload, **kw)
+            except Exception as exc:  # network, quota, auth ...
+                self._failed(exc)
+        return self.mock.generate(prompt, task=task, payload=payload)
 
     def generate_json(self, prompt, *, task="", payload=None):
-        try:
-            return parse_json(self.inner.generate(prompt, task=task, payload=payload))
-        except Exception as exc:
-            log.warning("%s JSON call failed (%s); using offline mock", self.inner.name, exc)
-            return self.mock.generate_json(prompt, task=task, payload=payload)
+        if not self.disabled:
+            try:
+                return parse_json(self.inner.generate(prompt, task=task, payload=payload))
+            except Exception as exc:
+                self._failed(exc)
+        return self.mock.generate_json(prompt, task=task, payload=payload)
 
 
 _CACHE: dict[str, LLM] = {}

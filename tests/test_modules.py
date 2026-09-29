@@ -146,3 +146,10 @@ def test_run_cycle(kb, tracer, sample_data, tmp_path):
     assert rounds and rounds[0].knowledge_state
     if rounds[0].gaps:
         assert rounds[0].recommendations and rounds[0].evaluation["concepts"]
+
+
+def test_classification_metrics():
+    from plrs.kt import classification_metrics
+
+    m = classification_metrics(np.array([1, 1, 0, 0]), np.array([0.9, 0.2, 0.8, 0.1]))
+    assert m == {"accuracy": 0.5, "precision": 0.5, "recall": 0.5, "f1": 0.5}

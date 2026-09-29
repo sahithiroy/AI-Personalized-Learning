@@ -7,7 +7,7 @@ llm:
   # Secondary models used for cross-verification (paper Sec. III-D.3)
   verifiers: [gemini, deepseek]
   openai_model: gpt-4o-mini
-  gemini_model: gemini-1.5-flash
+  gemini_model: gemini-2.5-flash   # gemini-1.5-flash has been retired by Google
   deepseek_model: deepseek-chat
   temperature: 0.4
   # If an API key is missing, the provider silently falls back to the offline mock.

@@ -64,7 +64,9 @@ DEEPSEEK_API_KEY=...      # cross-verification
 ```
 
 Any provider without a key uses the mock. The same happens if a real API call fails, as long as
-`llm.fallback_to_mock: true` is set in `config.yaml`. To force mocks everywhere, set `PLRS_PRIMARY_LLM=mock`.
+`llm.fallback_to_mock: true` is set in `config.yaml`. If a provider reports an account problem (no credit, invalid key, unknown
+model), it is switched off for the rest of the run so the system doesn't wait on a failing call every time; the web page then
+shows it as "unavailable, offline mock". To force mocks everywhere, set `PLRS_PRIMARY_LLM=mock`.
 
 > **Note:** the first run downloads the `all-MiniLM-L6-v2` model (~90 MB). On some Windows machines, importing
 > `transformers` takes about a minute. For quick experiments, set `PLRS_EMBEDDER=hashing` to skip it.
@@ -217,7 +219,7 @@ python -m plrs experiments --which kt --epochs 12
 | Part | Paper | Output |
 |---|---|---|
 | `data` | Tables 1, 2 and the gap matrix | dataset statistics |
-| `kt` | Table 5, Fig. 4 | final train/test loss, AUC and MAE for EKT vs DKT; per-epoch history in `data/models/kt_history.csv`, plot in `kt_curves.png` |
+| `kt` | Table 5, Fig. 4 | final train/test loss, AUC, MAE, accuracy, precision, recall and F1 for EKT vs DKT; per-epoch history in `data/models/kt_history.csv`, plot in `kt_curves.png` |
 | `mcq` | Tables 3, 4 | questions from each generator model compared with the teacher-written questions: semantic similarity, readability, diversity, relevance |
 | `remedial` | Fig. 7, Table 6 | competency distribution before and after remediation, plus a paired t-test for each concept (30 learners) |
 
@@ -279,12 +281,26 @@ config.yaml                 all parameters
 data/sample/                sample curriculum (+ generated CSVs)
 data/store/                 vector DB, concepts.json, question_bank.json, learner reports   (generated)
 data/models/                ekt.pt / dkt.pt, kt_history.csv, experiments.json               (generated)
+docs/                       Project_Report.pdf / .docx (final-year report), report_source/ (scripts that build it)
 plrs/                       the package (see section 7)
 plrs/static/index.html      web frontend (plain HTML + JavaScript, no build step)
 tests/                      pytest suite
 ```
 
-## 12. Limitations
+## 12. Project report
+
+The complete final-year project report is in `docs/`, in two formats with the same content:
+
+- `docs/Project_Report.pdf`: ready to print or submit.
+- `docs/Project_Report.docx`: editable in Word. Fill in the placeholders in square brackets (student names, roll numbers,
+  college, guide, logos), then right-click the Table of Contents and choose **Update Field** (Word also offers to update
+  fields when the file opens) so the contents, list of figures and list of tables show page numbers.
+
+All result numbers in the report are read from this project's own output files. `docs/report_source/` holds the scripts
+that rebuild it after new experiments: `make_figures.py` (charts and diagrams), `make_screens.py` (screenshots of the
+running web app), `content.py` (the text), `render_pdf.py` and `render_docx.js`.
+
+## 13. Limitations
 
 - Only **EKT and DKT** are implemented. The paper also compares DKVMN, AKT and SimpleKT.
 - The **mock provider** builds questions and recommendations from sentences in the curriculum. It is useful for

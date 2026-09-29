@@ -173,7 +173,21 @@ def _evaluate(model, enc: Encoder, seqs, bs: int, max_len: int, loss_fn) -> dict
             ys.append(y.numpy())
             ps.append(torch.sigmoid(lg).numpy())
     y, p = np.concatenate(ys), np.concatenate(ps)
-    return {"loss": sum(losses) / len(y), "auc": auc_score(y, p), "mae": float(np.abs(y - p).mean())}
+    return {"loss": sum(losses) / len(y), "auc": auc_score(y, p), "mae": float(np.abs(y - p).mean()),
+            **classification_metrics(y, p)}
+
+
+def classification_metrics(y_true: np.ndarray, y_prob: np.ndarray, threshold: float = 0.5) -> dict:
+    """Accuracy, precision, recall and F1 for 'answers correctly' predicted at ``threshold``."""
+    pred = (np.asarray(y_prob) >= threshold).astype(int)
+    y = np.asarray(y_true).astype(int)
+    tp = int(((pred == 1) & (y == 1)).sum())
+    fp = int(((pred == 1) & (y == 0)).sum())
+    fn = int(((pred == 0) & (y == 1)).sum())
+    precision = tp / (tp + fp) if tp + fp else 0.0
+    recall = tp / (tp + fn) if tp + fn else 0.0
+    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+    return {"accuracy": float((pred == y).mean()), "precision": precision, "recall": recall, "f1": f1}
 
 
 # --------------------------------------------------------------------------- training
