@@ -1,4 +1,4 @@
-"""Generative-AI providers: OpenAI (primary), Gemini and DeepSeek (cross-verification).
+"""Generative-AI providers: Gemini, Groq, OpenRouter, Ollama (free options), OpenAI and DeepSeek.
 
 Every call goes through ``LLM.generate(prompt, task=..., payload=...)``:
 
@@ -16,6 +16,7 @@ import logging
 import os
 import random
 import re
+import time
 from typing import Any
 
 from .config import get_config
@@ -68,7 +69,8 @@ class OpenAIProvider(LLM):
     def __init__(self, model: str, temperature: float, api_key: str, base_url: str | None = None):
         from openai import OpenAI
 
-        self.client = OpenAI(api_key=api_key, base_url=base_url)
+        # retries are handled by FallbackProvider, which knows about free-tier rate limits
+        self.client = OpenAI(api_key=api_key, base_url=base_url, max_retries=0, timeout=60)
         self.model = model
         self.temperature = temperature
 
@@ -81,75 +83,118 @@ class OpenAIProvider(LLM):
         return resp.choices[0].message.content or ""
 
 
-class DeepSeekProvider(OpenAIProvider):
-    """DeepSeek exposes an OpenAI-compatible endpoint."""
-
-    name = "deepseek"
-
-
-class GeminiProvider(LLM):
-    name = "gemini"
-
-    def __init__(self, model: str, temperature: float, api_key: str):
-        import google.generativeai as genai
-
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(model)
-        self.temperature = temperature
-
-    def generate(self, prompt, *, task="", payload=None, system="You are an expert educator and assessment designer."):
-        resp = self.model.generate_content(
-            f"{system}\n\n{prompt}", generation_config={"temperature": self.temperature}
-        )
-        return resp.text or ""
-
-
 class FallbackProvider(LLM):
     """Wraps a real provider; on an API error answers with the mock instead.
 
-    Account-level errors (no credit, bad key, unknown model, no permission) will not fix themselves,
-    so after one of those the provider is switched off for the rest of the process instead of
-    paying a slow failed network call on every request.
+    * Requests are paced to ``llm.requests_per_minute`` so free tiers are not exceeded.
+    * Rate limits (HTTP 429 / "exceeded your current quota" / "rate limit") are temporary: the call
+      waits (using the delay the provider suggests when it gives one) and retries. Only after several
+      consecutive calls still fail this way is the provider switched off for the rest of the run.
+    * Account-level errors (no credit, bad key, retired model, no permission) will not fix themselves,
+      so after one of those the provider is switched off at once instead of paying a slow failed
+      network call on every request.
     """
 
-    PERMANENT = ("401", "402", "403", "404", "insufficient", "quota", "credit", "not found",
-                 "invalid api key", "permission")
+    PERMANENT = ("401", "402", "403", "404", "insufficient", "credit", "not found", "invalid api key",
+                 "permission", "no longer available", "connection error", "connection refused")
+    RATE_LIMIT = ("429", "rate limit", "rate_limit", "exceeded your current quota", "resource_exhausted",
+                  "too many requests")
 
-    def __init__(self, inner: LLM, mock: "MockProvider"):
+    def __init__(self, inner: LLM, mock: "MockProvider", rpm: float | None = None, retries: int = 2,
+                 max_wait: float = 60.0, give_up_after: int = 3):
         self.inner, self.mock = inner, mock
         self.disabled = False
+        self.min_interval = 60.0 / rpm if rpm else 0.0
+        self.retries, self.max_wait, self.give_up_after = retries, max_wait, give_up_after
+        self._last = 0.0
+        self._rate_failures = 0
+        self.sleep = time.sleep  # replaceable in tests
 
     @property
     def name(self) -> str:
         return f"{self.inner.name} (unavailable, offline mock)" if self.disabled else self.inner.name
 
-    def _failed(self, exc: Exception) -> None:
-        text = str(exc).lower()
-        if any(k in text for k in self.PERMANENT):
-            self.disabled = True
-            log.warning("%s is unavailable (%s) - using the offline mock for the rest of this run",
-                        self.inner.name, str(exc)[:160])
-        else:
-            log.warning("%s call failed (%s); using offline mock for this call", self.inner.name, str(exc)[:160])
+    def _pace(self) -> None:
+        wait = self._last + self.min_interval - time.monotonic()
+        if wait > 0:
+            self.sleep(wait)
+        self._last = time.monotonic()
+
+    @staticmethod
+    def _retry_delay(text: str, attempt: int) -> float:
+        m = re.search(r"retry[^0-9]{0,25}([0-9]+(?:\.[0-9]+)?)\s*s", text, re.I)
+        return float(m.group(1)) + 1.0 if m else 10.0 * (attempt + 1)
+
+    def _call(self, prompt, task, payload, **kw):
+        """Real provider answer, or None when the mock must answer this call."""
+        for attempt in range(self.retries + 1):
+            self._pace()
+            try:
+                text = self.inner.generate(prompt, task=task, payload=payload, **kw)
+                self._rate_failures = 0
+                return text
+            except Exception as exc:  # network, quota, auth ...
+                msg = str(exc)
+                low = msg.lower()
+                if any(k in low for k in self.RATE_LIMIT) and not any(
+                        k in low for k in ("insufficient", "credit")):
+                    if attempt < self.retries:
+                        delay = min(self._retry_delay(msg, attempt), self.max_wait)
+                        log.info("%s rate-limited; waiting %.0f s before retrying", self.inner.name, delay)
+                        self.sleep(delay)
+                        continue
+                    self._rate_failures += 1
+                    if self._rate_failures >= self.give_up_after:
+                        self.disabled = True
+                        log.warning("%s keeps hitting its rate limit/quota (%s) - using the offline mock for the "
+                                    "rest of this run", self.inner.name, msg[:160])
+                    else:
+                        log.warning("%s rate-limited; using the offline mock for this call", self.inner.name)
+                    return None
+                if any(k in low for k in self.PERMANENT):
+                    self.disabled = True
+                    log.warning("%s is unavailable (%s) - using the offline mock for the rest of this run",
+                                self.inner.name, msg[:160])
+                else:
+                    log.warning("%s call failed (%s); using offline mock for this call", self.inner.name, msg[:160])
+                return None
+        return None
 
     def generate(self, prompt, *, task="", payload=None, **kw):
         if not self.disabled:
-            try:
-                return self.inner.generate(prompt, task=task, payload=payload, **kw)
-            except Exception as exc:  # network, quota, auth ...
-                self._failed(exc)
+            text = self._call(prompt, task, payload, **kw)
+            if text is not None:
+                return text
         return self.mock.generate(prompt, task=task, payload=payload)
 
     def generate_json(self, prompt, *, task="", payload=None):
         if not self.disabled:
-            try:
-                return parse_json(self.inner.generate(prompt, task=task, payload=payload))
-            except Exception as exc:
-                self._failed(exc)
+            text = self._call(prompt, task, payload)
+            if text is not None:
+                try:
+                    return parse_json(text)
+                except ValueError as exc:
+                    log.warning("%s returned unparseable output (%s); using offline mock for this call",
+                                self.inner.name, str(exc)[:120])
         return self.mock.generate_json(prompt, task=task, payload=payload)
 
 
 _CACHE: dict[str, LLM] = {}
+
+
+# Providers that speak the OpenAI chat API: name -> (API-key env var or None, default base URL, config model key).
+# Gemini (Google AI Studio), Groq and OpenRouter offer free, rate-limited keys; Ollama runs locally with no key.
+OPENAI_COMPATIBLE = {
+    "gemini": ("GEMINI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/openai/", "gemini_model"),
+    "deepseek": ("DEEPSEEK_API_KEY", "https://api.deepseek.com", "deepseek_model"),
+    "groq": ("GROQ_API_KEY", "https://api.groq.com/openai/v1", "groq_model"),
+    "openrouter": ("OPENROUTER_API_KEY", "https://openrouter.ai/api/v1", "openrouter_model"),
+    "ollama": (None, "http://localhost:11434/v1", "ollama_model"),
+}
+
+
+class CompatibleProvider(OpenAIProvider):
+    """Any OpenAI-compatible endpoint (Gemini, DeepSeek, Groq, OpenRouter, Ollama)."""
 
 
 def get_llm(name: str | None = None) -> LLM:
@@ -163,20 +208,22 @@ def get_llm(name: str | None = None) -> LLM:
     try:
         if name == "openai" and os.getenv("OPENAI_API_KEY"):
             provider = OpenAIProvider(cfg["openai_model"], cfg["temperature"], os.environ["OPENAI_API_KEY"])
-        elif name == "deepseek" and os.getenv("DEEPSEEK_API_KEY"):
-            provider = DeepSeekProvider(
-                cfg["deepseek_model"], cfg["temperature"], os.environ["DEEPSEEK_API_KEY"],
-                base_url=os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
+        elif name in OPENAI_COMPATIBLE and (OPENAI_COMPATIBLE[name][0] is None
+                                            or os.getenv(OPENAI_COMPATIBLE[name][0])):
+            key_env, url, model_key = OPENAI_COMPATIBLE[name]
+            provider = CompatibleProvider(
+                cfg[model_key], cfg["temperature"], os.getenv(key_env) if key_env else "ollama",
+                base_url=os.getenv(f"{name.upper()}_BASE_URL", url),
             )
-        elif name == "gemini" and os.getenv("GEMINI_API_KEY"):
-            provider = GeminiProvider(cfg["gemini_model"], cfg["temperature"], os.environ["GEMINI_API_KEY"])
+            provider.name = name
         elif name != "mock":
             log.info("No API key for %s - using offline mock provider", name)
     except ImportError as exc:
         log.warning("Package for %s not installed (%s) - using offline mock", name, exc)
         provider = mock
     if not provider.is_mock and cfg.get("fallback_to_mock", True):
-        provider = FallbackProvider(provider, mock)
+        rpm = (cfg.get("requests_per_minute") or {}).get(name)
+        provider = FallbackProvider(provider, mock, rpm=rpm)
     _CACHE[name] = provider
     return provider
 

@@ -1,0 +1,720 @@
+{
+  "kt_ablation": {
+    "DKT": {
+      "per_seed": [
+        {
+          "test_auc": 0.6649474161708334,
+          "test_accuracy": 0.6302564102564102,
+          "test_f1": 0.7104805246954893,
+          "test_mae": 0.44681552052497864,
+          "test_loss": 0.6367280562718709,
+          "train_auc": 0.6998140315861215,
+          "mastery_auc": 0.6649474161708334,
+          "delta_after_correct": 0.07318670764565467,
+          "share_up_after_correct": 0.9766666666666667,
+          "delta_after_wrong": -0.09630189999938012,
+          "share_down_after_wrong": 1.0
+        },
+        {
+          "test_auc": 0.6925649650718677,
+          "test_accuracy": 0.658974358974359,
+          "test_f1": 0.7283126787416587,
+          "test_mae": 0.42644166946411133,
+          "test_loss": 0.622735272248586,
+          "train_auc": 0.6896822399088648,
+          "mastery_auc": 0.6925649650718677,
+          "delta_after_correct": 0.06099432167907556,
+          "share_up_after_correct": 0.9733333333333334,
+          "delta_after_wrong": -0.0713779354840517,
+          "share_down_after_wrong": 0.9966666666666667
+        },
+        {
+          "test_auc": 0.6920957663185765,
+          "test_accuracy": 0.6417094017094017,
+          "test_f1": 0.696231884057971,
+          "test_mae": 0.4455215334892273,
+          "test_loss": 0.6273119815190633,
+          "train_auc": 0.6905957567657869,
+          "mastery_auc": 0.6920957663185765,
+          "delta_after_correct": 0.07148678312699,
+          "share_up_after_correct": 0.98,
+          "delta_after_wrong": -0.0919597627967596,
+          "share_down_after_wrong": 0.9983333333333333
+        }
+      ],
+      "mean": {
+        "test_auc": 0.6832027158537594,
+        "test_accuracy": 0.6436467236467237,
+        "test_f1": 0.7116750291650397,
+        "test_mae": 0.43959290782610577,
+        "test_loss": 0.6289251033465068,
+        "train_auc": 0.6933640094202578,
+        "mastery_auc": 0.6832027158537594,
+        "delta_after_correct": 0.06855593748390675,
+        "share_up_after_correct": 0.9766666666666667,
+        "delta_after_wrong": -0.08654653276006381,
+        "share_down_after_wrong": 0.9983333333333334
+      },
+      "std": {
+        "test_auc": 0.015811293803879408,
+        "test_accuracy": 0.014456661331659711,
+        "test_f1": 0.016073720091505383,
+        "test_mae": 0.011407668624774674,
+        "test_loss": 0.007134502274385006,
+        "train_auc": 0.005604526538171712,
+        "mastery_auc": 0.015811293803879408,
+        "delta_after_correct": 0.006603480978029233,
+        "share_up_after_correct": 0.0033333333333332993,
+        "delta_after_wrong": 0.013314589605503304,
+        "share_down_after_wrong": 0.0016666666666666496
+      }
+    },
+    "EKT (full)": {
+      "per_seed": [
+        {
+          "test_auc": 0.8269933529153839,
+          "test_accuracy": 0.7483760683760684,
+          "test_f1": 0.7832744405182567,
+          "test_mae": 0.33118176460266113,
+          "test_loss": 0.5035692930221558,
+          "train_auc": 0.848238353420035,
+          "mastery_auc": 0.6753083054833549,
+          "delta_after_correct": 0.09504705612858136,
+          "share_up_after_correct": 0.9433333333333334,
+          "delta_after_wrong": -0.13867962680757046,
+          "share_down_after_wrong": 0.9616666666666667
+        },
+        {
+          "test_auc": 0.8351485977133916,
+          "test_accuracy": 0.7632478632478632,
+          "test_f1": 0.804350897019353,
+          "test_mae": 0.31982091069221497,
+          "test_loss": 0.49099972248077395,
+          "train_auc": 0.8463404178677038,
+          "mastery_auc": 0.6986776294019528,
+          "delta_after_correct": 0.09683199403186639,
+          "share_up_after_correct": 0.9016666666666666,
+          "delta_after_wrong": -0.12051344777146976,
+          "share_down_after_wrong": 0.9466666666666667
+        },
+        {
+          "test_auc": 0.8392458316511042,
+          "test_accuracy": 0.7651282051282051,
+          "test_f1": 0.7983563252127972,
+          "test_mae": 0.3204922378063202,
+          "test_loss": 0.4892370589574178,
+          "train_auc": 0.8453718342799866,
+          "mastery_auc": 0.7036651476496039,
+          "delta_after_correct": 0.10633658401668072,
+          "share_up_after_correct": 0.8583333333333333,
+          "delta_after_wrong": -0.08526633953054746,
+          "share_down_after_wrong": 0.905
+        }
+      ],
+      "mean": {
+        "test_auc": 0.8337959274266264,
+        "test_accuracy": 0.758917378917379,
+        "test_f1": 0.7953272209168022,
+        "test_mae": 0.32383163770039874,
+        "test_loss": 0.4946020248201159,
+        "train_auc": 0.8466502018559084,
+        "mastery_auc": 0.6925503608449706,
+        "delta_after_correct": 0.09940521139237617,
+        "share_up_after_correct": 0.9011111111111111,
+        "delta_after_wrong": -0.1148198047031959,
+        "share_down_after_wrong": 0.9377777777777778
+      },
+      "std": {
+        "test_auc": 0.006237234681398672,
+        "test_accuracy": 0.009177327625349327,
+        "test_f1": 0.01085982777430944,
+        "test_mae": 0.006374240671095968,
+        "test_loss": 0.007815732206878007,
+        "train_auc": 0.0014581521129761604,
+        "mastery_auc": 0.01513886354345752,
+        "delta_after_correct": 0.006068726857617252,
+        "share_up_after_correct": 0.042502723224300404,
+        "delta_after_wrong": 0.02715801894424783,
+        "share_down_after_wrong": 0.029360467248275124
+      }
+    },
+    "EKT w/o attention": {
+      "per_seed": [
+        {
+          "test_auc": 0.8226233399270765,
+          "test_accuracy": 0.749059829059829,
+          "test_f1": 0.7886553412035704,
+          "test_mae": 0.3362625539302826,
+          "test_loss": 0.5074677793184916,
+          "train_auc": 0.8416129113000599,
+          "mastery_auc": 0.6782325081355761,
+          "delta_after_correct": 0.12382614555458228,
+          "share_up_after_correct": 0.9716666666666667,
+          "delta_after_wrong": -0.1815398466338714,
+          "share_down_after_wrong": 0.975
+        },
+        {
+          "test_auc": 0.826844061638675,
+          "test_accuracy": 0.7499145299145299,
+          "test_f1": 0.7883084937056867,
+          "test_mae": 0.3298910856246948,
+          "test_loss": 0.5025667532285054,
+          "train_auc": 0.8403775675580378,
+          "mastery_auc": 0.7028896505450255,
+          "delta_after_correct": 0.13625126866002876,
+          "share_up_after_correct": 0.995,
+          "delta_after_wrong": -0.16386233578125636,
+          "share_down_after_wrong": 0.96
+        },
+        {
+          "test_auc": 0.8366899172200126,
+          "test_accuracy": 0.7617094017094017,
+          "test_f1": 0.7960795787009948,
+          "test_mae": 0.3256612718105316,
+          "test_loss": 0.4929982431729635,
+          "train_auc": 0.8390038022051454,
+          "mastery_auc": 0.7063366705894817,
+          "delta_after_correct": 0.14445404750605426,
+          "share_up_after_correct": 0.945,
+          "delta_after_wrong": -0.14868583324054876,
+          "share_down_after_wrong": 0.9716666666666667
+        }
+      ],
+      "mean": {
+        "test_auc": 0.8287191062619214,
+        "test_accuracy": 0.7535612535612536,
+        "test_f1": 0.7910144712034173,
+        "test_mae": 0.3306049704551697,
+        "test_loss": 0.5010109252399868,
+        "train_auc": 0.840331427021081,
+        "mastery_auc": 0.6958196097566943,
+        "delta_after_correct": 0.13484382057355512,
+        "share_up_after_correct": 0.9705555555555555,
+        "delta_after_wrong": -0.16469600521855884,
+        "share_down_after_wrong": 0.9688888888888889
+      },
+      "std": {
+        "test_auc": 0.007218309597053218,
+        "test_accuracy": 0.00706943187751918,
+        "test_f1": 0.004389938640597251,
+        "test_mae": 0.005336573742489138,
+        "test_loss": 0.007359165687364277,
+        "train_auc": 0.0013051663798743867,
+        "mastery_auc": 0.015328081888167795,
+        "delta_after_correct": 0.010385724207631074,
+        "share_up_after_correct": 0.025018511664883808,
+        "delta_after_wrong": 0.01644286479176226,
+        "share_down_after_wrong": 0.007876359377087694
+      }
+    },
+    "EKT w/o mastery loss": {
+      "per_seed": [
+        {
+          "test_auc": 0.8270820215880265,
+          "test_accuracy": 0.7480341880341881,
+          "test_f1": 0.7903271692745377,
+          "test_mae": 0.3288726508617401,
+          "test_loss": 0.5022325809796652,
+          "train_auc": 0.8487526784164418,
+          "mastery_auc": 0.6472208352504802,
+          "delta_after_correct": 0.04979079186916351,
+          "share_up_after_correct": 0.7483333333333333,
+          "delta_after_wrong": -0.0720847577850024,
+          "share_down_after_wrong": 0.7966666666666666
+        },
+        {
+          "test_auc": 0.8366388679059618,
+          "test_accuracy": 0.7629059829059829,
+          "test_f1": 0.8042895442359249,
+          "test_mae": 0.3202989101409912,
+          "test_loss": 0.4893606869379679,
+          "train_auc": 0.8463511104224792,
+          "mastery_auc": 0.6707023226894421,
+          "delta_after_correct": 0.059025472899278,
+          "share_up_after_correct": 0.7616666666666667,
+          "delta_after_wrong": -0.08488150502244632,
+          "share_down_after_wrong": 0.8683333333333333
+        },
+        {
+          "test_auc": 0.8382726442350368,
+          "test_accuracy": 0.7634188034188034,
+          "test_f1": 0.792876384316073,
+          "test_mae": 0.32283738255500793,
+          "test_loss": 0.4910678148269653,
+          "train_auc": 0.8451901236217841,
+          "mastery_auc": 0.6657553995974104,
+          "delta_after_correct": 0.06216665503879388,
+          "share_up_after_correct": 0.7133333333333334,
+          "delta_after_wrong": -0.044898998215794565,
+          "share_down_after_wrong": 0.7066666666666667
+        }
+      ],
+      "mean": {
+        "test_auc": 0.8339978445763417,
+        "test_accuracy": 0.7581196581196581,
+        "test_f1": 0.7958310326088451,
+        "test_mae": 0.3240029811859131,
+        "test_loss": 0.49422036091486615,
+        "train_auc": 0.8467646374869017,
+        "mastery_auc": 0.6612261858457776,
+        "delta_after_correct": 0.0569943066024118,
+        "share_up_after_correct": 0.7411111111111112,
+        "delta_after_wrong": -0.0672884203410811,
+        "share_down_after_wrong": 0.7905555555555556
+      },
+      "std": {
+        "test_auc": 0.006044730099652362,
+        "test_accuracy": 0.008738036184021882,
+        "test_f1": 0.0074353505997417045,
+        "test_mae": 0.004404114282456002,
+        "test_loss": 0.006991088912495989,
+        "train_auc": 0.0018169211983440252,
+        "mastery_auc": 0.012378626579411602,
+        "delta_after_correct": 0.006433096042536379,
+        "share_up_after_correct": 0.02496293548740107,
+        "delta_after_wrong": 0.020418223534209815,
+        "share_down_after_wrong": 0.08100640121025642
+      }
+    },
+    "EKT + exercise dropout 0.5": {
+      "per_seed": [
+        {
+          "test_auc": 0.8248991491534516,
+          "test_accuracy": 0.747008547008547,
+          "test_f1": 0.7821607300559317,
+          "test_mae": 0.34219834208488464,
+          "test_loss": 0.506980820496877,
+          "train_auc": 0.8438550254854736,
+          "mastery_auc": 0.6729859076323709,
+          "delta_after_correct": 0.079991048052907,
+          "share_up_after_correct": 0.9266666666666666,
+          "delta_after_wrong": -0.10707022443413734,
+          "share_down_after_wrong": 0.945
+        },
+        {
+          "test_auc": 0.8323064964107135,
+          "test_accuracy": 0.7569230769230769,
+          "test_f1": 0.7982978723404255,
+          "test_mae": 0.332735538482666,
+          "test_loss": 0.49512709776560465,
+          "train_auc": 0.8433855243634188,
+          "mastery_auc": 0.6975743374459871,
+          "delta_after_correct": 0.08438213629027208,
+          "share_up_after_correct": 0.9083333333333333,
+          "delta_after_wrong": -0.07447015963494778,
+          "share_down_after_wrong": 0.835
+        },
+        {
+          "test_auc": 0.835690362951064,
+          "test_accuracy": 0.7664957264957265,
+          "test_f1": 0.7937179099969798,
+          "test_mae": 0.33622583746910095,
+          "test_loss": 0.49615097681681314,
+          "train_auc": 0.8407951152689609,
+          "mastery_auc": 0.6995560346925744,
+          "delta_after_correct": 0.11313262646396954,
+          "share_up_after_correct": 0.8916666666666667,
+          "delta_after_wrong": -0.06856273353099823,
+          "share_down_after_wrong": 0.865
+        }
+      ],
+      "mean": {
+        "test_auc": 0.830965336171743,
+        "test_accuracy": 0.7568091168091168,
+        "test_f1": 0.791392170797779,
+        "test_mae": 0.33705323934555054,
+        "test_loss": 0.4994196316930983,
+        "train_auc": 0.8426785550392845,
+        "mastery_auc": 0.690038759923644,
+        "delta_after_correct": 0.09250193693571622,
+        "share_up_after_correct": 0.9088888888888889,
+        "delta_after_wrong": -0.08336770586669445,
+        "share_down_after_wrong": 0.8816666666666665
+      },
+      "std": {
+        "test_auc": 0.005519203465754045,
+        "test_accuracy": 0.009744089555831658,
+        "test_f1": 0.008316167229831535,
+        "test_mae": 0.0047853535295111355,
+        "test_loss": 0.006568162922207963,
+        "train_auc": 0.0016479128776212815,
+        "mastery_auc": 0.014801405657749893,
+        "delta_after_correct": 0.01800109515516953,
+        "share_up_after_correct": 0.01750661250732077,
+        "delta_after_wrong": 0.02073840545035677,
+        "share_down_after_wrong": 0.056862407030773256
+      }
+    }
+  },
+  "ordering": {
+    "EKT, ordered exams": {
+      "per_seed": [
+        {
+          "test_auc": 0.7991404260578155,
+          "test_accuracy": 0.7299145299145299,
+          "test_f1": 0.7648809523809523,
+          "test_mae": 0.34942641854286194,
+          "test_loss": 0.5412928104400635,
+          "train_auc": 0.8268469037090806,
+          "mastery_auc": 0.7674316465191674,
+          "delta_after_correct": -0.007879190891981126,
+          "share_up_after_correct": 0.5216666666666666,
+          "delta_after_wrong": -0.38257517797251545,
+          "share_down_after_wrong": 1.0
+        },
+        {
+          "test_auc": 0.8101078056229424,
+          "test_accuracy": 0.7408547008547008,
+          "test_f1": 0.7874369040942233,
+          "test_mae": 0.3377760648727417,
+          "test_loss": 0.5194379266103109,
+          "train_auc": 0.8241470083485434,
+          "mastery_auc": 0.7819915835038996,
+          "delta_after_correct": -0.029450073887904486,
+          "share_up_after_correct": 0.43,
+          "delta_after_wrong": -0.3735511941090226,
+          "share_down_after_wrong": 1.0
+        },
+        {
+          "test_auc": 0.8103817173808089,
+          "test_accuracy": 0.7364102564102564,
+          "test_f1": 0.7761324041811847,
+          "test_mae": 0.33618009090423584,
+          "test_loss": 0.5255174112319946,
+          "train_auc": 0.8251322176118733,
+          "mastery_auc": 0.7807819383850553,
+          "delta_after_correct": -0.005997402171293895,
+          "share_up_after_correct": 0.5383333333333333,
+          "delta_after_wrong": -0.3562442690879106,
+          "share_down_after_wrong": 1.0
+        }
+      ],
+      "mean": {
+        "test_auc": 0.8065433163538556,
+        "test_accuracy": 0.7357264957264956,
+        "test_f1": 0.7761500868854534,
+        "test_mae": 0.34112752477327984,
+        "test_loss": 0.5287493827607896,
+        "train_auc": 0.8253753765564991,
+        "mastery_auc": 0.7767350561360408,
+        "delta_after_correct": -0.014442222317059836,
+        "share_up_after_correct": 0.49666666666666665,
+        "delta_after_wrong": -0.3707902137231496,
+        "share_down_after_wrong": 1.0
+      },
+      "std": {
+        "test_auc": 0.006412553739671693,
+        "test_accuracy": 0.005502043398096109,
+        "test_f1": 0.011277986253377661,
+        "test_mae": 0.007231217848754364,
+        "test_loss": 0.01128021350751848,
+        "train_auc": 0.001366273561087359,
+        "mastery_auc": 0.0080796586068277,
+        "delta_after_correct": 0.013031192914568666,
+        "share_up_after_correct": 0.05833333333333333,
+        "delta_after_wrong": 0.013380823972787401,
+        "share_down_after_wrong": 0.0
+      }
+    },
+    "DKT, ordered exams": {
+      "per_seed": [
+        {
+          "test_auc": 0.7560650870567407,
+          "test_accuracy": 0.6981196581196581,
+          "test_f1": 0.7421897810218978,
+          "test_mae": 0.3995417654514313,
+          "test_loss": 0.5792653846740723,
+          "train_auc": 0.7850249057732817,
+          "mastery_auc": 0.7560650870567407,
+          "delta_after_correct": -0.043393357420961065,
+          "share_up_after_correct": 0.4866666666666667,
+          "delta_after_wrong": -0.21663406352202097,
+          "share_down_after_wrong": 0.68
+        },
+        {
+          "test_auc": 0.7690413528543075,
+          "test_accuracy": 0.7117948717948718,
+          "test_f1": 0.7694201312910284,
+          "test_mae": 0.3832986652851105,
+          "test_loss": 0.5603789989153544,
+          "train_auc": 0.7810292814237226,
+          "mastery_auc": 0.7690413528543075,
+          "delta_after_correct": -0.035490343322356545,
+          "share_up_after_correct": 0.5133333333333333,
+          "delta_after_wrong": -0.23762702651321888,
+          "share_down_after_wrong": 0.7083333333333334
+        },
+        {
+          "test_auc": 0.7694246035742288,
+          "test_accuracy": 0.7039316239316239,
+          "test_f1": 0.7568781583380123,
+          "test_mae": 0.38727256655693054,
+          "test_loss": 0.5650354766845703,
+          "train_auc": 0.7776696362549663,
+          "mastery_auc": 0.7694246035742288,
+          "delta_after_correct": 0.004469765921433767,
+          "share_up_after_correct": 0.5133333333333333,
+          "delta_after_wrong": -0.18412872133155664,
+          "share_down_after_wrong": 0.5916666666666667
+        }
+      ],
+      "mean": {
+        "test_auc": 0.7648436811617589,
+        "test_accuracy": 0.7046153846153845,
+        "test_f1": 0.7561626902169795,
+        "test_mae": 0.3900376657644908,
+        "test_loss": 0.5682266200913323,
+        "train_auc": 0.7812412744839903,
+        "mastery_auc": 0.7648436811617589,
+        "delta_after_correct": -0.024804644940627948,
+        "share_up_after_correct": 0.5044444444444444,
+        "delta_after_wrong": -0.21279660378893217,
+        "share_down_after_wrong": 0.66
+      },
+      "std": {
+        "test_auc": 0.007604900138994386,
+        "test_accuracy": 0.006863199965772535,
+        "test_f1": 0.01362926685185397,
+        "test_mae": 0.008467225399977275,
+        "test_loss": 0.00983928040756367,
+        "train_auc": 0.003682214444456742,
+        "mastery_auc": 0.007604900138994386,
+        "delta_after_correct": 0.025658483128417453,
+        "share_up_after_correct": 0.01539600717838999,
+        "delta_after_wrong": 0.02695480916700906,
+        "share_down_after_wrong": 0.06085045421176229
+      }
+    },
+    "EKT, shuffled exams": {
+      "per_seed": [
+        {
+          "test_auc": 0.8269933529153839,
+          "test_accuracy": 0.7483760683760684,
+          "test_f1": 0.7832744405182567,
+          "test_mae": 0.33118176460266113,
+          "test_loss": 0.5035692930221558,
+          "train_auc": 0.848238353420035,
+          "mastery_auc": 0.6753083054833549,
+          "delta_after_correct": 0.09504705612858136,
+          "share_up_after_correct": 0.9433333333333334,
+          "delta_after_wrong": -0.13867962680757046,
+          "share_down_after_wrong": 0.9616666666666667
+        },
+        {
+          "test_auc": 0.8351485977133916,
+          "test_accuracy": 0.7632478632478632,
+          "test_f1": 0.804350897019353,
+          "test_mae": 0.31982091069221497,
+          "test_loss": 0.49099972248077395,
+          "train_auc": 0.8463404178677038,
+          "mastery_auc": 0.6986776294019528,
+          "delta_after_correct": 0.09683199403186639,
+          "share_up_after_correct": 0.9016666666666666,
+          "delta_after_wrong": -0.12051344777146976,
+          "share_down_after_wrong": 0.9466666666666667
+        },
+        {
+          "test_auc": 0.8392458316511042,
+          "test_accuracy": 0.7651282051282051,
+          "test_f1": 0.7983563252127972,
+          "test_mae": 0.3204922378063202,
+          "test_loss": 0.4892370589574178,
+          "train_auc": 0.8453718342799866,
+          "mastery_auc": 0.7036651476496039,
+          "delta_after_correct": 0.10633658401668072,
+          "share_up_after_correct": 0.8583333333333333,
+          "delta_after_wrong": -0.08526633953054746,
+          "share_down_after_wrong": 0.905
+        }
+      ],
+      "mean": {
+        "test_auc": 0.8337959274266264,
+        "test_accuracy": 0.758917378917379,
+        "test_f1": 0.7953272209168022,
+        "test_mae": 0.32383163770039874,
+        "test_loss": 0.4946020248201159,
+        "train_auc": 0.8466502018559084,
+        "mastery_auc": 0.6925503608449706,
+        "delta_after_correct": 0.09940521139237617,
+        "share_up_after_correct": 0.9011111111111111,
+        "delta_after_wrong": -0.1148198047031959,
+        "share_down_after_wrong": 0.9377777777777778
+      },
+      "std": {
+        "test_auc": 0.006237234681398672,
+        "test_accuracy": 0.009177327625349327,
+        "test_f1": 0.01085982777430944,
+        "test_mae": 0.006374240671095968,
+        "test_loss": 0.007815732206878007,
+        "train_auc": 0.0014581521129761604,
+        "mastery_auc": 0.01513886354345752,
+        "delta_after_correct": 0.006068726857617252,
+        "share_up_after_correct": 0.042502723224300404,
+        "delta_after_wrong": 0.02715801894424783,
+        "share_down_after_wrong": 0.029360467248275124
+      }
+    },
+    "DKT, shuffled exams": {
+      "per_seed": [
+        {
+          "test_auc": 0.6649474161708334,
+          "test_accuracy": 0.6302564102564102,
+          "test_f1": 0.7104805246954893,
+          "test_mae": 0.44681552052497864,
+          "test_loss": 0.6367280562718709,
+          "train_auc": 0.6998140315861215,
+          "mastery_auc": 0.6649474161708334,
+          "delta_after_correct": 0.07318670764565467,
+          "share_up_after_correct": 0.9766666666666667,
+          "delta_after_wrong": -0.09630189999938012,
+          "share_down_after_wrong": 1.0
+        },
+        {
+          "test_auc": 0.6925649650718677,
+          "test_accuracy": 0.658974358974359,
+          "test_f1": 0.7283126787416587,
+          "test_mae": 0.42644166946411133,
+          "test_loss": 0.622735272248586,
+          "train_auc": 0.6896822399088648,
+          "mastery_auc": 0.6925649650718677,
+          "delta_after_correct": 0.06099432167907556,
+          "share_up_after_correct": 0.9733333333333334,
+          "delta_after_wrong": -0.0713779354840517,
+          "share_down_after_wrong": 0.9966666666666667
+        },
+        {
+          "test_auc": 0.6920957663185765,
+          "test_accuracy": 0.6417094017094017,
+          "test_f1": 0.696231884057971,
+          "test_mae": 0.4455215334892273,
+          "test_loss": 0.6273119815190633,
+          "train_auc": 0.6905957567657869,
+          "mastery_auc": 0.6920957663185765,
+          "delta_after_correct": 0.07148678312699,
+          "share_up_after_correct": 0.98,
+          "delta_after_wrong": -0.0919597627967596,
+          "share_down_after_wrong": 0.9983333333333333
+        }
+      ],
+      "mean": {
+        "test_auc": 0.6832027158537594,
+        "test_accuracy": 0.6436467236467237,
+        "test_f1": 0.7116750291650397,
+        "test_mae": 0.43959290782610577,
+        "test_loss": 0.6289251033465068,
+        "train_auc": 0.6933640094202578,
+        "mastery_auc": 0.6832027158537594,
+        "delta_after_correct": 0.06855593748390675,
+        "share_up_after_correct": 0.9766666666666667,
+        "delta_after_wrong": -0.08654653276006381,
+        "share_down_after_wrong": 0.9983333333333334
+      },
+      "std": {
+        "test_auc": 0.015811293803879408,
+        "test_accuracy": 0.014456661331659711,
+        "test_f1": 0.016073720091505383,
+        "test_mae": 0.011407668624774674,
+        "test_loss": 0.007134502274385006,
+        "train_auc": 0.005604526538171712,
+        "mastery_auc": 0.015811293803879408,
+        "delta_after_correct": 0.006603480978029233,
+        "share_up_after_correct": 0.0033333333333332993,
+        "delta_after_wrong": 0.013314589605503304,
+        "share_down_after_wrong": 0.0016666666666666496
+      }
+    }
+  },
+  "retrieval": {
+    "Fixed windows + similarity | 500": {
+      "chunk_size": 500,
+      "strategy": "Fixed windows + similarity",
+      "chunks": 21,
+      "purity": 0.637220502235982,
+      "coverage": 0.7242490842490843
+    },
+    "Unit-aware chunks + similarity | 500": {
+      "chunk_size": 500,
+      "strategy": "Unit-aware chunks + similarity",
+      "chunks": 22,
+      "purity": 0.6880158730158731,
+      "coverage": 0.792930402930403
+    },
+    "Unit-aware chunks + unit filter (ours) | 500": {
+      "chunk_size": 500,
+      "strategy": "Unit-aware chunks + unit filter (ours)",
+      "chunks": 22,
+      "purity": 1.0,
+      "coverage": 1.0
+    },
+    "Fixed windows + similarity | 1000": {
+      "chunk_size": 1000,
+      "strategy": "Fixed windows + similarity",
+      "chunks": 9,
+      "purity": 0.3839077944341102,
+      "coverage": 0.9846153846153847
+    },
+    "Unit-aware chunks + similarity | 1000": {
+      "chunk_size": 1000,
+      "strategy": "Unit-aware chunks + similarity",
+      "chunks": 11,
+      "purity": 0.508969696969697,
+      "coverage": 1.0
+    },
+    "Unit-aware chunks + unit filter (ours) | 1000": {
+      "chunk_size": 1000,
+      "strategy": "Unit-aware chunks + unit filter (ours)",
+      "chunks": 11,
+      "purity": 1.0,
+      "coverage": 1.0
+    }
+  },
+  "closed_loop": {
+    "with remediation": {
+      "learners": 40,
+      "reached_by_round": {
+        "1": 0,
+        "2": 38,
+        "3": 39,
+        "4": 40
+      },
+      "mean_gaps_per_round": [
+        4.5,
+        0.05,
+        0.025,
+        0.0
+      ],
+      "mean_mastery_per_round": [
+        0.5640685,
+        0.8180949999999999,
+        0.8199829999999999,
+        0.8211489999999999
+      ]
+    },
+    "without remediation": {
+      "learners": 40,
+      "reached_by_round": {
+        "1": 0,
+        "2": 27,
+        "3": 33,
+        "4": 35
+      },
+      "mean_gaps_per_round": [
+        4.5,
+        0.85,
+        0.475,
+        0.275
+      ],
+      "mean_mastery_per_round": [
+        0.5640685,
+        0.7791085,
+        0.7973429999999999,
+        0.801444
+      ]
+    }
+  },
+  "seeds": [
+    42,
+    7,
+    123
+  ]
+}

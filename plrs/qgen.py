@@ -132,6 +132,8 @@ class QuestionGenerator:
         )
 
     def _refine(self, q: MCQ) -> MCQ:
+        if not get_config()["mcq"].get("refine", True):  # saves one LLM call per question (free tiers)
+            return q
         prompt = ("Check this multiple-choice question. Fix grammar, ambiguity and formatting without "
                   "changing its meaning or the correct answer. Return the same JSON object.\n"
                   + json.dumps(asdict(q)))

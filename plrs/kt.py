@@ -200,11 +200,12 @@ def train_kt(records: list[Record], model_type: str = "ekt", epochs: int | None 
 
     concepts = sorted({r.concept for r in records})
     enc = Encoder(concepts)
-    seqs = [enc.steps(rs) for rs in by_learner(records).values()]
-    seqs = [s for s in seqs if len(s) >= 2]
-    rng.shuffle(seqs)
-    split = int(len(seqs) * cfg["train_split"])
-    train, test = seqs[:split], seqs[split:]
+    items = [(lid, enc.steps(rs)) for lid, rs in by_learner(records).items()]
+    items = [(lid, s) for lid, s in items if len(s) >= 2]
+    rng.shuffle(items)
+    split = int(len(items) * cfg["train_split"])
+    train, test = [s for _, s in items[:split]], [s for _, s in items[split:]]
+    aux_weight = float(cfg.get("aux_loss_weight", 0.5))
 
     hparams = {"embedding_dim": cfg["embedding_dim"], "hidden_dim": cfg["hidden_dim"],
                "dropout": cfg["dropout"], "use_attention": cfg["use_attention"],
@@ -226,7 +227,7 @@ def train_kt(records: list[Record], model_type: str = "ekt", epochs: int | None 
             # auxiliary loss trains the concept-mastery head y_t = sigma(W h_t + b) directly,
             # so the reported knowledge state is calibrated (not only the next-answer logit)
             aux = mastery[:, :-1].gather(-1, c[:, 1:].unsqueeze(-1)).squeeze(-1)
-            loss = loss_fn(logits[tm], y) + 0.5 * loss_fn(aux[tm], y)
+            loss = loss_fn(logits[tm], y) + aux_weight * loss_fn(aux[tm], y)
             opt.zero_grad()
             loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(), 5.0)
@@ -239,6 +240,7 @@ def train_kt(records: list[Record], model_type: str = "ekt", epochs: int | None 
                  tr["auc"], te.get("auc", float("nan")))
 
     tracer = KnowledgeTracer(model, enc, model_type, hparams)
+    tracer.test_ids = [lid for lid, _ in items[split:]]  # held-out learners, for further analysis
     if save:
         tracer.save()
     return tracer, history

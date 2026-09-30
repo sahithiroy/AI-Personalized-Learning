@@ -2,14 +2,25 @@
 # Values mirror the settings reported in the paper (Pradeesh et al., IEEE Access 2025).
 
 llm:
-  # Primary generator (paper Sec. V-A.1: OpenAI selected as primary engine)
-  primary: openai            # openai | gemini | deepseek | mock
-  # Secondary models used for cross-verification (paper Sec. III-D.3)
-  verifiers: [gemini, deepseek]
+  # Free setup (default): Gemini free tier generates; Groq and OpenRouter free tiers cross-verify.
+  # The paper's setup is  primary: openai  and  verifiers: [gemini, deepseek]  (OpenAI and DeepSeek are paid).
+  # Fully local and free, no keys:  primary: ollama  and  verifiers: [ollama]  (needs Ollama running).
+  primary: gemini            # gemini | groq | openrouter | ollama | openai | deepseek | mock
+  verifiers: [groq, openrouter]
+  # Model names change often - if a provider says a model is retired, put the name it suggests here.
+  gemini_model: gemini-3.8-flash                           # Google AI Studio free tier
+  groq_model: llama-3.3-70b-versatile                      # https://console.groq.com/docs/models
+  openrouter_model: meta-llama/llama-3.3-70b-instruct:free # models ending in ":free" cost nothing
+  ollama_model: llama3.2                                   # after: ollama pull llama3.2
   openai_model: gpt-4o-mini
-  gemini_model: gemini-2.5-flash   # gemini-1.5-flash has been retired by Google
   deepseek_model: deepseek-chat
   temperature: 0.4
+  # Pace requests to stay under free-tier limits (requests per minute; omit a provider for no pacing).
+  # Rate-limited calls wait and retry; check your own limits in each provider's console and adjust.
+  requests_per_minute:
+    gemini: 8
+    groq: 25
+    openrouter: 15
   # If an API key is missing, the provider silently falls back to the offline mock.
   fallback_to_mock: true
 
@@ -27,6 +38,7 @@ mcq:
   generation_multiplier: 3   # Appendix A: generate ~3x the required questions
   dedup_threshold: 0.85      # Sec. III-D.1: cosine similarity cut-off
   verification_min_score: 3  # min avg verifier score (1-5) to accept a question
+  refine: false              # paper: true (one extra LLM call per question); false saves free-tier quota
 
 remedial:
   max_refinement_rounds: 2
@@ -49,6 +61,7 @@ ekt:
   train_split: 0.75
   max_seq_len: 200
   use_attention: true        # EKTA variant (exercise-similarity attention)
+  aux_loss_weight: 0.5       # extra loss on the mastery output (0 = paper's plain next-answer loss)
   exercise_dropout: 0.0      # >0 hides exercise text during training (robustness to unseen questions)
 
 paths:

@@ -57,11 +57,23 @@ Only `numpy`, `torch`, `pyyaml` and `pypdf` are strictly required. Everything el
 cp .env.example .env      # then fill in the keys you have
 ```
 
+**Free setup (the default in `config.yaml`):** one generator and two different checking models, all on free tiers.
+Free tiers are rate-limited and their terms change, so check each provider's pricing page.
+
 ```
-OPENAI_API_KEY=...        # primary generator (MCQs, remedial content, concept extraction)
-GEMINI_API_KEY=...        # cross-verification
-DEEPSEEK_API_KEY=...      # cross-verification
+GEMINI_API_KEY=...        # generator: free key from https://aistudio.google.com/apikey
+GROQ_API_KEY=...          # verifier 1: free key from https://console.groq.com/keys
+OPENROUTER_API_KEY=...    # verifier 2: free key from https://openrouter.ai/keys (uses a ":free" model)
 ```
+
+**Fully offline and free:** install [Ollama](https://ollama.com), run `ollama pull llama3.2`, and set
+`primary: ollama` and `verifiers: [ollama]` in `config.yaml`. No key is needed.
+
+**Paid setup used in the paper:** `primary: openai`, `verifiers: [gemini, deepseek]`, with `OPENAI_API_KEY`,
+`GEMINI_API_KEY` and `DEEPSEEK_API_KEY`.
+
+Model names change often. If a provider replies that a model is retired or "no longer available", put the model
+name it suggests into `config.yaml` (`gemini_model`, `groq_model`, `openrouter_model`, `ollama_model`).
 
 Any provider without a key uses the mock. The same happens if a real API call fails, as long as
 `llm.fallback_to_mock: true` is set in `config.yaml`. If a provider reports an account problem (no credit, invalid key, unknown
@@ -295,6 +307,11 @@ The complete final-year project report is in `docs/`, in two formats with the sa
 - `docs/Project_Report.docx`: editable in Word. Fill in the placeholders in square brackets (student names, roll numbers,
   college, guide, logos), then right-click the Table of Contents and choose **Update Field** (Word also offers to update
   fields when the file opens) so the contents, list of figures and list of tables show page numbers.
+
+A 6-page **research paper** in IEEE two-column format is in `docs/Research_Paper.pdf` and `docs/Research_Paper.docx`.
+It reports new experiments: EKT ablation over 3 seeds, calibration of the mastery output, the exam-ordering
+artifact, retrieval purity, and a 40-learner closed-loop simulation. `docs/paper_source/` holds the scripts that
+produced it, and `paper_results.json` holds the raw numbers.
 
 All result numbers in the report are read from this project's own output files. `docs/report_source/` holds the scripts
 that rebuild it after new experiments: `make_figures.py` (charts and diagrams), `make_screens.py` (screenshots of the
