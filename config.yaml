@@ -2,15 +2,16 @@
 # Values mirror the settings reported in the paper (Pradeesh et al., IEEE Access 2025).
 
 llm:
-  # Free setup (default): Gemini free tier generates; Groq and OpenRouter free tiers cross-verify.
+  # Free setup (default), all models tested with the project's keys on 2026-09-30:
+  #   Groq generates (fast); OpenRouter and Gemini free tiers cross-verify.
   # The paper's setup is  primary: openai  and  verifiers: [gemini, deepseek]  (OpenAI and DeepSeek are paid).
   # Fully local and free, no keys:  primary: ollama  and  verifiers: [ollama]  (needs Ollama running).
-  primary: gemini            # gemini | groq | openrouter | ollama | openai | deepseek | mock
-  verifiers: [groq, openrouter]
-  # Model names change often - if a provider says a model is retired, put the name it suggests here.
-  gemini_model: gemini-3.8-flash                           # Google AI Studio free tier
-  groq_model: llama-3.3-70b-versatile                      # https://console.groq.com/docs/models
-  openrouter_model: meta-llama/llama-3.3-70b-instruct:free # models ending in ":free" cost nothing
+  primary: groq              # gemini | groq | openrouter | ollama | openai | deepseek | mock
+  verifiers: [openrouter, gemini]
+  # Model names change often. List what your key can use:  python -m plrs models
+  groq_model: openai/gpt-oss-120b                            # alternative: qwen/qwen3.8-27b
+  openrouter_model: nvidia/nemotron-3-super-120b-a12b:free   # models ending in ":free" cost nothing
+  gemini_model: gemini-flash-lite-latest                     # "latest" alias is not retired; lite = more free quota
   ollama_model: llama3.2                                   # after: ollama pull llama3.2
   openai_model: gpt-4o-mini
   deepseek_model: deepseek-chat

@@ -259,6 +259,38 @@ def cmd_demo(a):
                                  rounds=3, seed=1, verbose=True))
 
 
+def cmd_models(a):
+    """List the chat models each configured provider offers to your API key (free call, no quota used)."""
+    import os
+
+    from .config import get_config
+    from .llm import OPENAI_COMPATIBLE
+
+    cfg = get_config()["llm"]
+    in_use = {cfg["primary"], *cfg["verifiers"]}
+    for name, (key_env, url, model_key) in OPENAI_COMPATIBLE.items():
+        if a.provider and name != a.provider:
+            continue
+        if key_env and not os.getenv(key_env):
+            print(f"{name:11} no {key_env} in .env")
+            continue
+        try:
+            from openai import OpenAI
+
+            client = OpenAI(api_key=os.getenv(key_env) or "ollama", base_url=url, max_retries=0, timeout=30)
+            ids = sorted(m.id.removeprefix("models/") for m in client.models.list().data)
+        except Exception as exc:
+            print(f"{name:11} could not list models: {str(exc)[:120]}")
+            continue
+        if name == "openrouter":
+            ids = [i for i in ids if i.endswith(":free")]  # free models only
+        role = " (in use)" if name in in_use else ""
+        print(f"\n{name}{role}: configured model = {cfg.get(model_key)}"
+              + ("  [NOT in this list]" if cfg.get(model_key) not in ids else ""))
+        for i in ids:
+            print(f"   {'*' if i == cfg.get(model_key) else ' '} {i}")
+
+
 def cmd_serve(a):
     import os
 
@@ -354,6 +386,10 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--epochs", type=int, default=12)
     s.add_argument("--historical", type=int, default=600)
     s.set_defaults(func=cmd_demo)
+
+    s = sub.add_parser("models", help="list the AI models your API keys can use (to fix retired model names)")
+    s.add_argument("--provider", help="only this provider, e.g. groq, openrouter, gemini")
+    s.set_defaults(func=cmd_models)
 
     s = sub.add_parser("serve", help="start the web frontend + REST API (needs fastapi)")
     s.add_argument("--host", default="127.0.0.1")

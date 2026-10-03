@@ -97,8 +97,9 @@ class FallbackProvider(LLM):
 
     PERMANENT = ("401", "402", "403", "404", "insufficient", "credit", "not found", "invalid api key",
                  "permission", "no longer available", "connection error", "connection refused")
+    # temporary: rate limits and busy/overloaded servers - wait and retry instead of giving up
     RATE_LIMIT = ("429", "rate limit", "rate_limit", "exceeded your current quota", "resource_exhausted",
-                  "too many requests")
+                  "too many requests", "502", "503", "504", "high demand", "overloaded", "temporarily unavailable")
 
     def __init__(self, inner: LLM, mock: "MockProvider", rpm: float | None = None, retries: int = 2,
                  max_wait: float = 60.0, give_up_after: int = 3):

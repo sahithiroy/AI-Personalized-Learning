@@ -148,3 +148,22 @@ def test_request_pacing():
     fb.generate("")
     fb.generate("")
     assert len(waits) == 1 and 0 < waits[0] <= 1.0
+
+
+def test_busy_server_503_is_retried():
+    from plrs.llm import FallbackProvider, LLM
+
+    class Busy(LLM):
+        name = "busy503"
+        calls = 0
+
+        def generate(self, prompt, **kw):
+            Busy.calls += 1
+            if Busy.calls == 1:
+                raise RuntimeError("Error code: 503 - This model is currently experiencing high demand.")
+            return '{"ok": true}'
+
+    fb = FallbackProvider(Busy(), MockProvider("busy503"))
+    fb.sleep = lambda s: None
+    assert fb.generate_json("", task="x", payload={}) == {"ok": True}
+    assert Busy.calls == 2 and not fb.disabled
