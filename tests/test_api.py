@@ -36,6 +36,18 @@ def test_analyze_and_recommend(client):
     assert recs and "Concept Gap Rationale" in recs[0]["markdown"]
 
 
+def test_study_material_pdf(client):
+    concepts = client.post("/analyze", json=LEARNER).json()["concepts"]
+    recs = [r["recommendation"] for r in client.post("/recommend", json=LEARNER).json()["recommendations"]]
+    res = client.post("/materials/pdf", json={"learner_id": "L1", "concepts": concepts, "recommendations": recs})
+    assert res.status_code == 200 and res.headers["content-type"] == "application/pdf"
+    assert res.content.startswith(b"%PDF") and len(res.content) > 2000
+    assert 'filename="study_material_L1.pdf"' in res.headers["content-disposition"]
+    one = client.post("/materials/pdf", json={"learner_id": "L1", "concepts": concepts, "recommendations": recs,
+                                              "only": recs[0]["concept"]})
+    assert one.status_code == 200 and one.content.startswith(b"%PDF") and len(one.content) <= len(res.content)
+
+
 def test_evaluation_flow(client):
     concept = "Operators, Pointers and Control Structures"
     start = client.post("/evaluation", json={"learner_id": "L1", "concepts": [concept], "rule": "1 and 100"}).json()

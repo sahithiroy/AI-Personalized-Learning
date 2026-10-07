@@ -16,7 +16,7 @@ _cfg["ekt"]["epochs"] = 2
 
 os.environ["PLRS_CONFIG"] = str(_TMP / "config.yaml")
 os.environ["PLRS_EMBEDDER"] = "hashing"
-for key in ("OPENAI_API_KEY", "GEMINI_API_KEY", "DEEPSEEK_API_KEY"):
+for key in ("OPENAI_API_KEY", "GEMINI_API_KEY", "DEEPSEEK_API_KEY", "GROQ_API_KEY", "OPENROUTER_API_KEY"):
     os.environ[key] = ""  # empty -> mock provider; load_dotenv() will not override it
 
 CURRICULUM = ROOT / "data" / "sample" / "curriculum_c_programming.txt"

@@ -1,0 +1,17 @@
+learner_id,exam,order,question_id,question_text,concept,course_outcome,difficulty,bloom_level,max_marks,marks
+STU002,Internal,0,Q42,"Which header file declares strlen, strcpy and strcmp?",String Manipulation and Text Processing,CO4,easy,Understand,2.0,2.0
+STU002,Internal,1,Q22,Which operator is used to obtain the address of a variable?,"Operators, Pointers and Control Structures",CO2,easy,Understand,2.0,2.0
+STU002,Internal,2,Q34,"Insert a number at a given position in an array, shifting later elements.",Algorithmic Problem Solving and Array Manipulation,CO3,medium,Apply,5.0,3.8
+STU002,Internal,3,Q12,What is the role of the main() function in a C program?,Fundamentals and System Architecture,CO1,easy,Understand,2.0,2.0
+STU002,Internal,4,Q32,Write a loop that prints every element of an integer array.,Algorithmic Problem Solving and Array Manipulation,CO3,easy,Understand,2.0,2.0
+STU002,Internal,5,Q11,List the stages a C program passes through from source code to executable.,Fundamentals and System Architecture,CO1,easy,Understand,2.0,2.0
+STU002,Internal,6,Q23,Trace the value of x after: int x = 5; x += x++ * 2; and explain the pitfall.,"Operators, Pointers and Control Structures",CO2,medium,Apply,5.0,5.0
+STU002,Internal,7,Q52,Which function opens a file for reading in C?,"Data Structures, Memory Management, and File Handling",CO5,easy,Understand,2.0,2.0
+STU002,Internal,8,Q33,Write a program to find the largest number in an array.,Algorithmic Problem Solving and Array Manipulation,CO3,medium,Apply,5.0,3.8
+STU002,Internal,9,Q43,Write a function that counts the vowels in a string.,String Manipulation and Text Processing,CO4,medium,Apply,5.0,5.0
+STU002,Internal,10,Q51,What does malloc return when the allocation fails?,"Data Structures, Memory Management, and File Handling",CO5,easy,Understand,2.0,2.0
+STU002,Internal,11,Q21,"What is the output of printf(""%d"", 7 / 2) in C?","Operators, Pointers and Control Structures",CO2,easy,Understand,2.0,2.0
+STU002,Internal,12,Q13,"Explain how the compiler, assembler and linker cooperate to build a program.",Fundamentals and System Architecture,CO1,medium,Apply,5.0,5.0
+STU002,Internal,13,Q41,How is the end of a string marked in C?,String Manipulation and Text Processing,CO4,easy,Understand,2.0,2.0
+STU002,Internal,14,Q31,How are elements of a one-dimensional array indexed in C?,Algorithmic Problem Solving and Array Manipulation,CO3,easy,Understand,2.0,2.0
+STU002,Internal,15,Q53,Define a struct for a student record and print an array of such records.,"Data Structures, Memory Management, and File Handling",CO5,medium,Apply,5.0,3.8

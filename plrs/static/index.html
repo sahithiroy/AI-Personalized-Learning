@@ -67,6 +67,10 @@
   details.rec summary { padding: 10px 14px; cursor: pointer; font-weight: 600; display: flex;
                         justify-content: space-between; gap: 10px; flex-wrap: wrap; }
   details.rec .body { padding: 0 16px 12px; }
+  .materials { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+               border: 1px solid var(--accent); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
+  #pdfViewer { margin-bottom: 14px; }
+  #pdfFrame { width: 100%; height: 80vh; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
   details.rec h4 { margin: 14px 0 4px; font-size: 14px; color: var(--accent); }
   details.rec ul { margin: 4px 0; padding-left: 20px; }
   .rationale { background: var(--warn-soft); border-radius: 6px; padding: 8px 10px; }
@@ -155,6 +159,27 @@
   <section class="card hidden" id="recCard">
     <h2><span class="step">3</span> Remedial recommendations</h2>
     <p class="hint">A personalised study plan for every weak concept, cross-checked by the verifier models.</p>
+    <div class="materials hidden" id="materialsRow">
+      <div>
+        <strong>&#128218; Study material (PDF)</strong>
+        <div class="meta">Your weak concepts (weakest first), the questions you missed, this plan and the matching syllabus pages.</div>
+      </div>
+      <div class="row" style="gap:8px">
+        <button class="btn" id="viewPdf">&#128196; View study material</button>
+        <button class="btn secondary" id="downloadPdf">&#11015; Download PDF</button>
+      </div>
+    </div>
+    <div id="pdfViewer" class="hidden">
+      <div class="row" style="justify-content:space-between; margin-bottom:6px">
+        <strong id="pdfTitle">Study material</strong>
+        <span class="row" style="gap:8px">
+          <button class="btn secondary" id="pdfDownloadShown">&#11015; Download this PDF</button>
+          <button class="btn secondary" id="pdfNewTab">Open in new tab</button>
+          <button class="btn secondary" id="pdfClose">Close</button>
+        </span>
+      </div>
+      <iframe id="pdfFrame" title="Study material PDF"></iframe>
+    </div>
     <div id="recs"></div>
   </section>
 
@@ -275,7 +300,7 @@ function setRecords(learnerId, records) {
   renderRows();
 }
 function resetResults() {
-  state.round = 1; state.history = []; state.session = null;
+  state.round = 1; state.history = []; state.session = null; state.materials = null;
   ["stateCard", "recCard", "evalCard"].forEach((id) => $(id).classList.add("hidden"));
 }
 
@@ -323,6 +348,8 @@ async function analyse() {
     state.history.push({ round: state.round, mastery: Object.fromEntries(a.concepts.map((c) => [c.concept, c.mastery])) });
     renderState(a.concepts);
     const r = await postJSON(`/recommend?round_no=${state.round}`, body, "Writing your personalised recommendations...");
+    state.materials = { learner_id: body.learner_id, concepts: a.concepts,
+                        recommendations: r.recommendations.map((x) => x.recommendation) };
     renderRecs(r.recommendations);
     renderEvalIntro();
     $("stateCard").scrollIntoView({ behavior: "smooth" });
@@ -361,8 +388,53 @@ function renderHistory() {
       ...state.history.map((h) => el("td", {}, h.mastery[n] === undefined ? "-" : pct(h.mastery[n])))))));
 }
 
+// ---------------------------------------------------------------- study-material PDF
+const pdf = { url: null, name: "" };
+async function fetchMaterials(only = null) {
+  if (!state.materials) throw new Error("Analyse a learner first.");
+  $("busyText").textContent = "Preparing your study material PDF...";
+  $("busy").classList.remove("hidden");
+  try {
+    const res = await fetch("/materials/pdf", { method: "POST", headers: { "Content-Type": "application/json" },
+                                                body: JSON.stringify({ ...state.materials, only }) });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || res.statusText);
+    if (pdf.url) URL.revokeObjectURL(pdf.url);
+    pdf.url = URL.createObjectURL(await res.blob());
+    const tag = only ? `_${only.split(/[ ,]/)[0]}` : "";
+    pdf.name = `study_material_${state.materials.learner_id}${tag}_round${state.round}.pdf`;
+    return pdf.url;
+  } finally { $("busy").classList.add("hidden"); }
+}
+function saveShownPdf() {
+  if (!pdf.url) return;
+  const a = el("a", { href: pdf.url, download: pdf.name });
+  document.body.append(a); a.click(); a.remove();
+}
+async function viewMaterials(only = null) {
+  showError("");
+  try {
+    await fetchMaterials(only);
+    $("pdfTitle").textContent = only ? `Study material: ${only}` : "Study material: all weak concepts";
+    $("pdfFrame").src = pdf.url;
+    $("pdfViewer").classList.remove("hidden");
+    $("pdfViewer").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (e) { showError(`Could not create the PDF: ${e.message}`); }
+}
+async function downloadMaterials(only = null) {
+  showError("");
+  try { await fetchMaterials(only); saveShownPdf(); }
+  catch (e) { showError(`Could not create the PDF: ${e.message}`); }
+}
+$("viewPdf").addEventListener("click", () => viewMaterials());
+$("downloadPdf").addEventListener("click", () => downloadMaterials());
+$("pdfDownloadShown").addEventListener("click", saveShownPdf);
+$("pdfNewTab").addEventListener("click", () => pdf.url && window.open(pdf.url, "_blank"));
+$("pdfClose").addEventListener("click", () => { $("pdfViewer").classList.add("hidden"); $("pdfFrame").removeAttribute("src"); });
+
 function renderRecs(recs) {
   $("recCard").classList.remove("hidden");
+  $("materialsRow").classList.toggle("hidden", !recs.length);
+  $("pdfViewer").classList.add("hidden");
   const box = $("recs");
   if (!recs.length) {
     box.replaceChildren(el("p", {}, "🎉 No knowledge gaps: every concept is at or above the OBE target."));
@@ -385,7 +457,10 @@ function renderRecs(recs) {
         el("h4", {}, "3. Explanation"), el("p", {}, r.remedial_explanation || ""),
         el("h4", {}, "4. Practice activities"), practice,
         el("h4", {}, "5. Why this was recommended"), el("p", { class: "rationale" }, r.concept_gap_rationale || ""),
-        ver));
+        ver,
+        el("div", { class: "row", style: "gap:8px; margin-top:10px" },
+          el("button", { class: "btn secondary", onclick: () => viewMaterials(r.concept) }, "📄 View PDF for this concept"),
+          el("button", { class: "btn secondary", onclick: () => downloadMaterials(r.concept) }, "⬇ Download"))));
   }));
 }
 

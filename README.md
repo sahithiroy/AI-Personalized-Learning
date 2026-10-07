@@ -270,6 +270,7 @@ python -m plrs serve            # http://127.0.0.1:8000/docs for the interactive
 | GET | `/concepts` | |
 | POST | `/analyze` | `{"learner_id": "...", "records": [{question_id, question_text, concept, difficulty, max_marks, marks}]}` |
 | POST | `/recommend` | same body as `/analyze`; returns JSON and markdown recommendations |
+| POST | `/materials/pdf` | `{learner_id, concepts, recommendations}` (outputs of `/analyze` and `/recommend`); returns a study-material PDF: weakest concept first, missed questions, the plan and the matching syllabus pages |
 | POST | `/mcq` | `{"concept": "...", "level": "easy", "n": 5}` |
 | POST | `/evaluation` | `{"learner_id": "...", "concepts": [...], "rule": "5 and 80"}`; returns a session id and the first questions (without answers) |
 | POST | `/evaluation/{id}/answer` | `{"concept": "...", "answers": {"<question id>": 2}}`; grades the level and returns the next level's questions |

@@ -24,6 +24,7 @@ sacrebleu>=2.4                  # Self-BLEU diversity score
 fastapi>=0.110
 uvicorn>=0.29
 python-multipart>=0.0.9
+reportlab>=4.0                  # study-material PDF for learners (POST /materials/pdf)
 
 # Optional: saves the KT training curves (Fig. 4) as data/models/kt_curves.png
 matplotlib>=3.8

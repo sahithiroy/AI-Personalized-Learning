@@ -18,7 +18,7 @@ from contextlib import asynccontextmanager
 from dataclasses import asdict
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, Response, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
@@ -188,6 +188,31 @@ def recommend(body: LearnerIn, round_no: int = 1):
             r = rec.recommend(g, round_no)
             out.append({"recommendation": r, "markdown": to_markdown(r)})
     return {"learner_id": body.learner_id, "recommendations": out}
+
+
+class MaterialsIn(BaseModel):
+    learner_id: str
+    concepts: list[dict]          # /analyze "concepts"
+    recommendations: list[dict]   # the "recommendation" objects from /recommend
+    only: str | None = None       # one concept only (the per-concept "View PDF" button)
+
+
+@app.post("/materials/pdf")
+def study_materials_pdf(body: MaterialsIn):
+    """Download a personal study-material PDF: recommendations + syllabus pages for every gap.
+
+    Reuses the recommendations already shown to the learner, so no extra LLM calls are made.
+    """
+    from .materials import build_study_pdf
+
+    try:
+        kb = _kb()
+    except HTTPException:
+        kb = None
+    pdf = build_study_pdf(body.learner_id, body.concepts, body.recommendations, kb, only=body.only)
+    safe = "".join(ch for ch in body.learner_id if ch.isalnum() or ch in "-_") or "learner"
+    return Response(pdf, media_type="application/pdf",
+                    headers={"Content-Disposition": f'inline; filename="study_material_{safe}.pdf"'})
 
 
 class MCQRequest(BaseModel):
