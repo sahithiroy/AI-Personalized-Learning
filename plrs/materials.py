@@ -116,11 +116,14 @@ def _concept_section(no: int, gap: dict, rec: dict, kb: CurriculumKB | None) -> 
 
     chunks = _reading(kb, concept)
     if chunks:
-        story += [Paragraph("Reading material from your syllabus", H2),
-                  Paragraph("These are the parts of the course notes that cover this concept. Read them before "
-                            "you try the practice activities.", META)]
-        for c in chunks:
-            story += [_box([Paragraph(_t(c), READ)], "read"), Spacer(1, 5)]
+        boxes = [_box([Paragraph(_t(c), READ)], "read") for c in chunks]
+        # keep the heading on the same page as the first passage
+        story.append(KeepTogether([Paragraph("Reading material from your syllabus", H2),
+                                   Paragraph("These are the parts of the course notes that cover this concept. "
+                                             "Read them before you try the practice activities.", META),
+                                   boxes[0], Spacer(1, 5)]))
+        for b in boxes[1:]:
+            story += [b, Spacer(1, 5)]
 
     story.append(Paragraph("4. Practice activities", H2))
     for a in rec.get("practice_activities") or []:

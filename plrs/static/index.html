@@ -232,11 +232,19 @@ function showError(msg) {
   box.classList.toggle("hidden", !msg);
   if (msg) box.scrollIntoView({ behavior: "smooth", block: "center" });
 }
+// fetch() that turns "Failed to fetch" (no answer at all) into a message that says what to do
+async function request(path, options) {
+  try { return await fetch(path, options); }
+  catch (e) {
+    throw new Error("The server is not reachable. Check that \"python -m plrs serve\" is still running " +
+                    "(look in its terminal window for an error), start it again if needed, then retry.");
+  }
+}
 async function api(path, options = {}, busyText = "Working...") {
   $("busyText").textContent = busyText;
   $("busy").classList.remove("hidden");
   try {
-    const res = await fetch(path, options);
+    const res = await request(path, options);
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.detail ? (typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail)) : res.statusText);
     return data;
@@ -395,7 +403,7 @@ async function fetchMaterials(only = null) {
   $("busyText").textContent = "Preparing your study material PDF...";
   $("busy").classList.remove("hidden");
   try {
-    const res = await fetch("/materials/pdf", { method: "POST", headers: { "Content-Type": "application/json" },
+    const res = await request("/materials/pdf", { method: "POST", headers: { "Content-Type": "application/json" },
                                                 body: JSON.stringify({ ...state.materials, only }) });
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || res.statusText);
     if (pdf.url) URL.revokeObjectURL(pdf.url);

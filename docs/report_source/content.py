@@ -195,7 +195,10 @@ remedial recommendation, which is cross-verified by two other models, and new cu
 questions are generated, de-duplicated and verified for Bloom's Taxonomy level. An adaptive test (Easy, Medium,
 Hard) re-assesses the learner and its answers are fed back into knowledge tracing, forming a continuous learning
 loop. The system is implemented in Python with PyTorch, sentence-transformers, FAISS, FastAPI and a web frontend,
-and works with OpenAI, Gemini and DeepSeek models or with an offline fallback.""")
+and runs on free generative AI services (Groq generates; OpenRouter and Google Gemini verify), on the paid OpenAI
+and DeepSeek models used in the paper, or on an offline fallback. For every knowledge gap the learner can also view
+or download a personal study-material PDF that combines the recommendation, the questions answered wrongly and the
+matching pages of the curriculum.""")
 P(f"""On a synthetic dataset for the course "Procedural Programming using C" ({T2['Learners']} learners,
 {T2['Unique Questions']} questions, {T2['Concepts']} concepts), EKT reached a test AUC of {f3(KT['ekt']['test_auc'])}
 against {f3(KT['dkt']['test_auc'])} for the DKT baseline. In a demonstration, a learner with five knowledge gaps
@@ -300,9 +303,11 @@ N(["Extract the knowledge concepts of a course from its curriculum document.",
     compare it with a Deep Knowledge Tracing (DKT) baseline.""",
    "Identify weak concepts using the OBE threshold and target.",
    "Generate personalized, cross-verified remedial recommendations for every weak concept.",
+   "Give every learner a personal study-material PDF for their own weak concepts, to read on screen or download.",
    "Generate new, non-duplicate questions for re-assessment through an adaptive (Easy, Medium, Hard) test.",
    "Track improvement before and after remediation, and evaluate it statistically.",
-   "Provide a web interface for learners and teachers, a REST API, and a command-line interface."])
+   "Provide a web interface for learners and teachers, a REST API, and a command-line interface.",
+   "Run on free generative AI services so that the system costs nothing to operate."])
 
 H2("1.5", "Scope of the Project")
 T("Scope of the project", ["Included", "Not included"],
@@ -312,6 +317,8 @@ T("Scope of the project", ["Included", "Not included"],
    ["Concept-level knowledge tracing (EKT, DKT)", "Video or multimedia content generation"],
    ["Knowledge-gap detection with OBE threshold and target", "Evaluation on real institutional student data (synthetic data is used)"],
    ["Personalized remedial recommendations with cross-verification", "A controlled classroom study with real learners"],
+   ["Personal study-material PDF for every learner's gaps", ""],
+   ["Free generative AI providers (Groq, OpenRouter, Gemini) with an offline fallback", ""],
    ["Adaptive re-testing and the continuous learning loop", ""],
    ["Result visualisation, experiments and statistical tests", ""],
    ["Web frontend, REST API and command-line interface", ""]], [0.5, 0.5])
@@ -327,12 +334,14 @@ T("What the paper proposes and what this project implements",
    ["Concept extraction", "Generative AI, reviewed by instructors", "Implemented; concepts saved to concepts.json for teacher review"],
    ["Knowledge tracing", "EKT; compared with DKT, DKVMN, AKT, SimpleKT", "EKT and DKT implemented and compared; DKVMN, AKT, SimpleKT not implemented"],
    ["Gap analysis", "OBE threshold and target", "Implemented"],
-   ["Remedial recommendation", "OpenAI, five sections, cross-verified by Gemini and DeepSeek", "Implemented with the same design"],
+   ["Remedial recommendation", "OpenAI, five sections, cross-verified by Gemini and DeepSeek", "Same design; by default Groq writes and OpenRouter and Gemini verify (all free)"],
+   ["Study material for learners", "Not part of the paper", "Added: a per-learner PDF with the plan, missed questions and syllabus pages"],
    ["MCQ generation", "RAG, 3x generation, de-duplication (0.85), cross-verification", "Implemented with the same design"],
    ["Adaptive evaluation", "Easy, Medium, Hard with instructor rules", "Implemented"],
    ["Data", "Real OBE data from the AMPLE LMS (1,276 learners)", "Synthetic data from an IRT-based learner simulator"],
    ["Learner survey", "Conducted (Table 7 of the paper)", "Not conducted; questionnaire provided in Appendix H"],
-   ["Interfaces", "In-house LMS (AMPLE)", "Web frontend, REST API and CLI built for this project"]], [0.24, 0.36, 0.40])
+   ["Interfaces", "In-house LMS (AMPLE)", "Web frontend, REST API and CLI built for this project"],
+   ["Cost of AI models", "Paid APIs (OpenAI, DeepSeek)", "Free tiers by default; paid models still selectable in config.yaml"]], [0.24, 0.36, 0.40])
 
 H2("1.7", "Organisation of the Report")
 B(["""**Chapter 2** reviews the literature on personalized learning, knowledge tracing, question generation and
@@ -430,12 +439,14 @@ T("Existing system compared with the proposed system", ["Aspect", "Existing syst
    ["Test", "Same test for all", "Adaptive: Easy, Medium, Hard, only on weak concepts"],
    ["Tracking", "One snapshot", "Continuous knowledge tracing after every answer"],
    ["Feedback", "Generic", "Explains which gaps were found and why the plan was given"],
+   ["Study material", "Same notes for everyone", "Personal PDF: only the learner's weak concepts, with matching syllabus pages"],
    ["Teacher effort", "High", "Teacher reviews concepts and flagged items only"]], [0.24, 0.33, 0.43])
 H2("3.4", "Feasibility Study")
 B(["""**Technical feasibility:** all components use mature open-source libraries (PyTorch, sentence-transformers,
     FAISS, FastAPI) and run on an ordinary laptop CPU; no GPU is required.""",
-   """**Economic feasibility:** the software is free and open source. Commercial LLM APIs are optional and billed per
-    use; the offline mode costs nothing.""",
+   """**Economic feasibility:** the software is free and open source. By default the system uses the free tiers of
+    Groq, OpenRouter and Google Gemini; paid APIs (OpenAI, DeepSeek) are optional, and the offline mode costs
+    nothing.""",
    """**Operational feasibility:** teachers upload a PDF and a results CSV they already have; learners use a web page
     that needs no installation."""])
 
@@ -456,18 +467,23 @@ T("Functional requirements", ["ID", "Requirement", "Module"],
    ["FR11", "Run an adaptive Easy/Medium/Hard test with an instructor-defined rule", "evaluation.py"],
    ["FR12", "Feed test answers back into knowledge tracing and repeat the loop", "pipeline.py"],
    ["FR13", "Report results: gap matrix, KT metrics, question metrics, pre/post t-test", "experiments.py"],
-   ["FR14", "Provide a web frontend, a REST API and a command-line interface", "static, api.py, cli.py"]],
+   ["FR14", "Provide a web frontend, a REST API and a command-line interface", "static, api.py, cli.py"],
+   ["FR15", "Produce a personal study-material PDF (gaps, missed questions, plan, syllabus pages) to view in the browser or download, for all gaps or one concept", "materials.py, api.py, frontend"],
+   ["FR16", "Use free AI providers with request pacing, retries on busy or rate-limited servers and automatic fallback", "llm.py, config.yaml"],
+   ["FR17", "List the models each API key can use, so retired model names can be replaced", "cli.py (models)"]],
   [0.1, 0.65, 0.25])
 H2("4.2", "Non-Functional Requirements")
 B(["**Reproducibility:** fixed random seeds; every setting is in one file, config.yaml.",
-   """**Robustness:** if an AI provider has no key, no credit or is unreachable, the system falls back to an offline
-    mock that returns the same JSON format, so it never stops working.""",
+   """**Robustness:** requests are paced to stay within free-tier limits; rate-limited (429) and busy (502/503/504)
+    calls wait and retry; if a provider has no key, no credit, a retired model or keeps failing, the system falls back
+    to an offline mock that returns the same JSON format, so it never stops working.""",
+   "**Cost:** runs on the free tiers of Groq, OpenRouter and Gemini; no paid API is needed.",
    """**Performance:** one EKT training epoch on 24,000 answers takes about 2-3 seconds on a laptop CPU; analysis of
     a learner takes milliseconds after the models are loaded.""",
    "**Usability:** a single-page web interface with no installation for learners.",
    """**Security and privacy:** API keys are kept in a .env file excluded from version control; answers are not
     shown to the learner before submission; learner records can be anonymised.""",
-   "**Maintainability:** modular Python package with 30 automated tests.",
+   "**Maintainability:** modular Python package with 36 automated tests.",
    "**Portability:** runs on Windows, Linux and macOS with Python 3.10 or newer."])
 H2("4.3", "Hardware Requirements")
 T("Hardware requirements", ["Component", "Minimum", "Used in this project"],
@@ -486,7 +502,8 @@ T("Software requirements (versions used)", ["Software", "Version", "Purpose"],
    ["FAISS (faiss-cpu)", "1.15", "Vector similarity search"],
    ["pypdf", "6.19", "Reading curriculum PDFs"],
    ["FastAPI / Uvicorn", "0.141 / 0.54", "REST API and web server"],
-   ["openai, google-generativeai", "3.20 / 0.8", "OpenAI, DeepSeek and Gemini clients"],
+   ["openai (Python client)", "3.20", "Groq, OpenRouter and Gemini (OpenAI-compatible endpoints); also OpenAI, DeepSeek, Ollama"],
+   ["reportlab", "5.0", "Personal study-material PDF"],
    ["SciPy, sacrebleu", "1.18 / 2.6", "t-test, Self-BLEU (optional; built-in fallbacks exist)"],
    ["matplotlib", "3.11", "Charts"],
    ["pytest", "9.1", "Automated tests"],
@@ -494,7 +511,7 @@ T("Software requirements (versions used)", ["Software", "Version", "Purpose"],
 H2("4.5", "Users and Use Cases")
 T("Users and their use cases", ["User", "Use cases"],
   [["Teacher / Admin", "Upload curriculum; review concepts; upload OBE results; set the evaluation rule; view gap matrix and experiment results"],
-   ["Learner", "View knowledge state and gaps; read personalized recommendations; take the adaptive self-assessment; see progress across rounds"],
+   ["Learner", "View knowledge state and gaps; read personalized recommendations; view or download the study-material PDF; take the adaptive self-assessment; see progress across rounds"],
    ["Developer / Researcher", "Train and compare KT models; run experiments; use the REST API; run tests"]], [0.25, 0.75])
 H2("4.6", "Technologies Used")
 P("Only technologies that are actually used in the implementation are listed.")
@@ -504,8 +521,10 @@ T("Technologies used", ["Technology", "Purpose in this project"],
    ["sentence-transformers (all-MiniLM-L6-v2)", "Embeddings of curriculum chunks, questions and exercise texts"],
    ["FAISS", "Vector database for the curriculum (numpy fallback when not installed)"],
    ["pypdf", "Extracting text from curriculum PDFs"],
-   ["OpenAI GPT-4o-mini", "Primary generator: concepts, recommendations, MCQs"],
-   ["Google Gemini, DeepSeek", "Cross-verification of recommendations and MCQs"],
+   ["Groq (openai/gpt-oss-120b, free)", "Primary generator: concepts, recommendations, MCQs"],
+   ["OpenRouter (nvidia/nemotron-3-super-120b-a12b:free), Google Gemini (gemini-flash-lite-latest)", "Free cross-verification of recommendations and MCQs"],
+   ["OpenAI GPT-4o-mini, DeepSeek (optional, paid)", "The models used in the paper; selectable in config.yaml"],
+   ["reportlab", "Personal study-material PDF for learners"],
    ["FastAPI + Uvicorn", "REST API and hosting of the web frontend"],
    ["HTML, CSS, JavaScript", "Single-page web frontend"],
    ["JSON, CSV and NumPy files", "Data storage (concepts, question bank, records, vectors); no SQL database is used"],
@@ -528,6 +547,7 @@ T("Modules with their inputs and outputs", ["Module (file)", "Input", "Output"],
    ["Gap analysis (gap.py)", "Knowledge state, OBE scores", "Level and gap flag per concept"],
    ["Remedial recommendation (remedial.py)", "Weak concept, attempts, curriculum context", "Five-part, cross-verified plan"],
    ["MCQ generation (qgen.py)", "Concept, level, curriculum context", "Verified, unique MCQs in the question bank"],
+   ["Study material (materials.py)", "Gaps, recommendations, curriculum context", "Personal study-material PDF"],
    ["Adaptive evaluation (evaluation.py)", "Weak concepts, rule, question bank", "Category per concept; new OBE records"],
    ["Pipeline (pipeline.py)", "Learner records", "Rounds of state, gaps, plans and results"],
    ["Interfaces (api.py, cli.py, static/)", "User actions", "Pages, JSON responses, console output"]],
@@ -552,9 +572,10 @@ T("Sequence of one learning round", ["Step", "Component", "Action"],
    ["2", "kt.py", "EKT reads the sequence and returns mastery per concept"],
    ["3", "gap.py", "Compares mastery with the 70% target; returns levels and gaps"],
    ["4", "remedial.py", "For each gap: retrieves context, generates the plan, cross-verifies it"],
-   ["5", "qgen.py", "Ensures enough unused questions exist for each level; generates more if needed"],
-   ["6", "evaluation.py", "Serves Easy questions, grades them, unlocks Medium and Hard"],
-   ["7", "pipeline.py", "Appends the answers to the history and repeats from step 2"]], [0.08, 0.22, 0.70])
+   ["5", "materials.py", "On request: builds the study-material PDF from the plans and the concept's syllabus chunks"],
+   ["6", "qgen.py", "Ensures enough unused questions exist for each level; generates more if needed"],
+   ["7", "evaluation.py", "Serves Easy questions, grades them, unlocks Medium and Hard"],
+   ["8", "pipeline.py", "Appends the answers to the history and repeats from step 2"]], [0.08, 0.22, 0.70])
 H2("5.5", "API Design")
 T("REST API endpoints", ["Method", "Path", "Purpose"],
   [["GET", "/", "Web frontend"], ["GET", "/health", "Active models, KT model, OBE threshold and target"],
@@ -564,6 +585,7 @@ T("REST API endpoints", ["Method", "Path", "Purpose"],
    ["POST", "/results/upload", "Upload an OBE results CSV"],
    ["POST", "/analyze", "Knowledge state, levels and gaps for a learner"],
    ["POST", "/recommend", "Remedial recommendations for the learner's gaps"],
+   ["POST", "/materials/pdf", "Study-material PDF for the learner's gaps (all gaps, or one concept)"],
    ["POST", "/mcq", "Generate questions for a concept and level"],
    ["POST", "/evaluation", "Start an adaptive evaluation session"],
    ["POST", "/evaluation/{id}/answer", "Submit answers for one level; get the next level"],
@@ -580,7 +602,8 @@ T("Main configuration parameters (config.yaml)", ["Parameter", "Value", "Source"
    ["EKT embedding / LSTM / dropout", "100 / 100 / 0.3", "Paper Sec. V-B"],
    ["Optimizer / learning rate / batch / epochs", "Adam / 0.001 / 32 / 12", "Paper Sec. V-B"],
    ["Train/test split", "75% / 25% of learners", "Paper Sec. V-B"],
-   ["Primary LLM / verifiers", "OpenAI / Gemini, DeepSeek", "Paper Sec. V-A.1"]], [0.36, 0.36, 0.28])
+   ["Primary LLM / verifiers", "Groq / OpenRouter, Gemini (free)", "This project (paper: OpenAI / Gemini, DeepSeek)"],
+   ["Requests per minute", "Gemini 8, Groq 25, OpenRouter 15", "This project (free-tier limits)"]], [0.36, 0.36, 0.28])
 
 # ============================================================================ Chapter 6
 H1("Methodology")
@@ -644,8 +667,9 @@ correct answer, an explanation, the concept, the difficulty and the Bloom's Taxo
 N(["**Refines** each question with the same model (grammar, format, ambiguity).",
    """**De-duplicates**: the question text plus its correct answer is embedded and compared with every question in the
     global question memory; if the maximum cosine similarity is above 0.85 the question is discarded.""",
-   """**Cross-verifies**: Gemini and DeepSeek each score the question from 1 to 5 for concept fit, difficulty, Bloom's
-    level and correctness of the key; questions with an average score below 3 are rejected.""",
+   """**Cross-verifies**: two verifier models from other companies (OpenRouter and Gemini by default; Gemini and
+    DeepSeek in the paper) each score the question from 1 to 5 for concept fit, difficulty, Bloom's level and
+    correctness of the key; questions with an average score below 3 are rejected.""",
    "**Stores** accepted questions in the question bank (question_bank.json), which persists across runs."])
 F("fig_mcq.png", "MCQ generation, de-duplication and verification pipeline")
 T("Difficulty levels and Bloom's Taxonomy levels", ["Difficulty", "Bloom's levels", "Typical question"],
@@ -717,24 +741,36 @@ B(["**Learning objectives:** what the learner should be able to do after studyin
    "**Remedial explanation:** the concept explained again from the curriculum.",
    "**Practice activities:** two hands-on exercises.",
    "**Concept gap rationale:** which gaps were detected and why this plan was generated (transparency)."])
-P("""The recommendation is scored by Gemini and DeepSeek (1 to 5). If the average score is below 3, it is regenerated
+P("""The recommendation is scored by the two verifier models (1 to 5). If the average score is below 3, it is regenerated
 with the reviewers' feedback, up to two more times. In later rounds the prompt asks for a more detailed explanation,
 simpler examples and additional practice.""")
 F("fig_remedial.png", "Remedial recommendation with cross-verification")
-H2("6.10", "Adaptive Evaluation and Re-testing")
+H2("6.10", "Personal Study Material")
+P("""A recommendation on the screen is easy to lose, and learners asked for something they could keep and study
+from. For this reason the system also produces a personal study-material PDF. It is built from the recommendations
+already shown to the learner, so it needs no additional AI calls. The PDF contains:""")
+N(["**Knowledge state:** a table of every concept with its mastery, level and status (study this or on target).",
+   "**How to use the material:** five study steps, starting with the weakest concept.",
+   """**One section per weak concept, weakest first:** the questions the learner answered wrongly, the five parts of
+    the recommendation, and the concept's own pages of the curriculum retrieved from the vector database (RAG), so
+    the learner reads the actual course notes next to the plan.""",
+   "**Self-check list:** one tick box per topic to revise, to be ticked before the adaptive re-test."])
+P("""In the web frontend the learner opens the PDF inside the page or downloads it. Each recommendation also has its
+own button, which produces a shorter PDF for that concept only.""")
+H2("6.11", "Adaptive Evaluation and Re-testing")
 P("""The adaptive test covers only the learner's weak concepts. For each concept the learner starts at Easy; a level
 is passed when the percentage of correct answers reaches the instructor's rule, and only then is the next level
 shown. The rule is written as "N and P": N questions per level and P percent to pass. A core course may use
 "5 and 80" (4 of 5 correct), an optional course "1 and 100". Questions already shown to the learner are excluded,
 so every round uses new questions and measures understanding rather than memory.""")
 F("fig_adaptive.png", "Adaptive evaluation and resulting categories")
-H2("6.11", "Continuous Learning Loop")
+H2("6.12", "Continuous Learning Loop")
 P("""The answers of the adaptive test are converted to OBE records (1 mark for a correct answer, 0 otherwise),
 appended to the learner's history and traced again by EKT. The loop stops when every concept reaches the target or
 after the maximum number of rounds (three by default).""")
 CODE(src(__import__("plrs.pipeline", fromlist=["PersonalizedLearningSystem"]).PersonalizedLearningSystem.run_cycle,
          44), "pipeline.py - run_cycle()")
-H2("6.12", "Evaluation Metrics")
+H2("6.13", "Evaluation Metrics")
 T("Evaluation metrics", ["Metric", "Definition", "Used for"],
   [["AUC", "Probability that a randomly chosen correct answer receives a higher predicted probability than a randomly chosen wrong answer (Mann-Whitney U) [26]", "Knowledge tracing"],
    ["Accuracy", "(TP + TN) / all predictions, threshold 0.5", "Knowledge tracing"],
@@ -763,6 +799,7 @@ CODE("""AI-Personalized-Learning/
 |-- .env.example              template for API keys (real keys go in .env, ignored by git)
 |-- requirements.txt          dependencies
 |-- README.md                 user guide
+|-- sample_uploads/           example OBE result CSVs for the web upload
 |-- data/
 |   |-- sample/               curriculum_c_programming.txt, historical.csv, current_batch.csv
 |   |-- store/                vector DB, concepts.json, question_bank.json, learner reports (generated)
@@ -771,11 +808,12 @@ CODE("""AI-Personalized-Learning/
 |   |-- config.py             configuration loading
 |   |-- data.py               OBE records, CSV I/O, synthetic data generator
 |   |-- embeddings.py         MiniLM embeddings (offline hashing fallback)
-|   |-- llm.py                OpenAI, Gemini, DeepSeek providers and offline mock
+|   |-- llm.py                Groq, OpenRouter, Gemini, OpenAI, DeepSeek, Ollama; pacing, retries, mock
 |   |-- rag.py                PDF loading, chunking, vector store, concept extraction
 |   |-- kt.py                 EKT and DKT models, training, metrics, knowledge state
 |   |-- gap.py                OBE levels, gap analysis, gap matrix
 |   |-- remedial.py           five-part recommendations with cross-verification
+|   |-- materials.py          personal study-material PDF
 |   |-- qgen.py               MCQ generation, de-duplication, question bank
 |   |-- evaluation.py         adaptive evaluation sessions
 |   |-- pipeline.py           continuous learning loop (Algorithm 1)
@@ -784,16 +822,25 @@ CODE("""AI-Personalized-Learning/
 |   |-- cli.py, __main__.py   command-line interface
 |   |-- api.py                FastAPI REST API
 |   `-- static/index.html     web frontend
-`-- tests/                    30 pytest test cases""", "Directory structure")
+`-- tests/                    36 pytest test cases""", "Directory structure")
 H2("7.3", "Implementation of the Modules")
 H3("7.3.1", "LLM providers and offline fallback")
-P("""All generative calls go through one interface, generate(prompt, task, payload). Real providers send the prompt
-to their API [32]: OpenAI and DeepSeek (OpenAI-compatible endpoint) through the openai client, Gemini through
-google-generativeai. The answer is parsed as JSON, tolerating code fences and extra text. If a provider has no key,
-its package is missing or a call fails, a deterministic offline mock produces an answer of the same JSON shape from
-the payload (for example, questions built from curriculum sentences with corrupted statements as distractors).
-After an account-level error (no credit, invalid key, unknown model) the provider is switched off for the rest of
-the run, so the system does not wait for a failing network call on every request.""")
+P("""All generative calls go through one interface, generate(prompt, task, payload). Every real provider is reached
+through the openai client, because Groq, OpenRouter, Google Gemini, DeepSeek and a local Ollama server all offer an
+OpenAI-compatible endpoint [32]; only the base URL, the key and the model name differ. By default Groq
+(openai/gpt-oss-120b) generates and OpenRouter (nvidia/nemotron-3-super-120b-a12b:free) and Gemini
+(gemini-flash-lite-latest) verify, all on free tiers. The answer is parsed as JSON, tolerating code fences and extra
+text.""")
+P("""Free tiers limit the number of requests and are sometimes overloaded, so every provider is wrapped in a
+FallbackProvider with three protections:""")
+B(["**Pacing:** at most a configured number of requests per minute (Gemini 8, Groq 25, OpenRouter 15).",
+   """**Retry:** a rate-limited (429) or busy (502, 503, 504) call waits, using the delay suggested by the server, and
+    is retried up to two times.""",
+   """**Circuit breaker:** after an account-level error (no credit, invalid key, retired model) or three
+    rate-limited calls in a row, the provider is switched off for the rest of the run and a deterministic offline
+    mock answers instead, with the same JSON shape."""])
+P("""Model names on free services change often. The command python -m plrs models asks each provider which models
+the configured key can use, marks the configured one and warns when it is no longer available.""")
 H3("7.3.2", "Knowledge tracing")
 P("""kt.py implements the EKT and DKT models in PyTorch [24], an encoder that maps concepts to indices and caches the
 embedding of each question text, batching with padding and masks, training with gradient clipping, evaluation with
@@ -806,6 +853,13 @@ paper). qgen.py implements the generation, refinement, de-duplication and verifi
 question memory. evaluation.py implements the adaptive session with rule parsing, grading, level progression and
 conversion of answers to OBE records.""")
 CODE(src(__import__("plrs.gap", fromlist=["analyze_learner"]).analyze_learner), "gap.py - analyze_learner()")
+H3("7.3.4", "Study-material PDF")
+P("""materials.py builds the PDF with reportlab. The endpoint POST /materials/pdf receives the learner id, the
+knowledge state from /analyze and the recommendations from /recommend, plus an optional concept name for a
+single-concept PDF. For each weak concept it adds the wrongly answered questions, the five sections of the plan and
+the concept's curriculum chunks from the vector database. All text is escaped, so C code such as a[i] < n or the
+null character is printed exactly. The frontend receives the PDF as a file, shows it in an embedded viewer and
+offers download and open-in-new-tab buttons.""")
 H2("7.4", "Command-Line Interface")
 T("Commands of the command-line interface (python -m plrs <command>)", ["Command", "Function"],
   [["sample-data", "Generate synthetic OBE data"], ["ingest <file>", "Index a curriculum and extract concepts"],
@@ -816,7 +870,8 @@ T("Commands of the command-line interface (python -m plrs <command>)", ["Command
    ["evaluate --rule \"5 and 80\"", "Take an adaptive test in the terminal"],
    ["cycle --learner <id>", "Full learning loop with a simulated learner"],
    ["experiments", "Reproduce the evaluation tables"], ["demo", "Run everything end to end"],
-   ["serve", "Start the web frontend and REST API"]], [0.4, 0.6])
+   ["serve", "Start the web frontend and REST API"],
+   ["models [--provider name]", "List the models each API key can use (to replace retired model names)"]], [0.4, 0.6])
 H2("7.5", "User Interface")
 P("""The web frontend guides a learner or teacher through one complete loop on a single page. The screenshots below
 were captured from the running application.""")
@@ -829,12 +884,14 @@ shots = [("ss01_home.png", "Home page: loading a sample learner, uploading a CSV
          ("ss07_graded.png", "Graded level with correct and wrong answers and explanations"),
          ("ss08_eval_done.png", "Self-assessment completed for all weak concepts"),
          ("ss09_round2.png", "Round 2: updated knowledge state and progress across rounds"),
+         ("ss11_materials.png", "Study material: view or download the personal PDF from the recommendations"),
+         ("ss12_study_pdf.png", "A page of the personal study-material PDF for one weak concept"),
          ("ss10_api_docs.png", "Interactive REST API documentation (/docs)")]
 for name, cap in shots:
-    F(name, cap, 0.9)
+    F(name, cap, 0.55 if name == "ss12_study_pdf.png" else 0.9)
 H2("7.6", "Testing")
-P("""The project has 30 automated test cases (pytest). The tests use a temporary data store, the offline embedder
-and the mock models, so they never call external APIs. All 30 tests pass.""")
+P("""The project has 36 automated test cases (pytest). The tests use a temporary data store, the offline embedder
+and the mock models, and every API key is blanked, so they never call external APIs. All 36 tests pass.""")
 T("Test cases", ["Test", "What is verified", "Result"],
   [["test_chunk_text_respects_size_and_overlap", "Chunks respect size, start at sentences and overlap", "Pass"],
    ["test_split_sections_finds_units", "Curriculum units are detected", "Pass"],
@@ -844,6 +901,11 @@ T("Test cases", ["Test", "What is verified", "Result"],
    ["test_parse_json_variants", "LLM answers with fences or extra text are parsed", "Pass"],
    ["test_mock_mcq_shape", "Offline questions have 4 options and a valid key", "Pass"],
    ["test_fallback_switches_off_after_account_error", "A provider with no credit is called only once", "Pass"],
+   ["test_free_openai_compatible_providers", "Groq and OpenRouter use their own endpoints; no key -> offline mock; Ollama needs no key", "Pass"],
+   ["test_rate_limit_waits_and_retries", "A 429 answer waits for the server's suggested delay and then succeeds", "Pass"],
+   ["test_rate_limit_gives_up_after_repeated_failures", "Repeated rate limits switch the provider off", "Pass"],
+   ["test_request_pacing", "Requests are spaced to the requests-per-minute limit", "Pass"],
+   ["test_busy_server_503_is_retried", "A busy server (503) is retried, not switched off", "Pass"],
    ["test_classify_thresholds", "Beginner / Intermediate / Expert boundaries (49.9, 50, 69.9, 70)", "Pass"],
    ["test_concept_scores_and_gaps", "Concept scores and gap flags", "Pass"],
    ["test_gap_matrix", "Class-wide attainment percentages", "Pass"],
@@ -861,6 +923,7 @@ T("Test cases", ["Test", "What is verified", "Result"],
    ["test_run_cycle", "The full learning loop runs and saves reports", "Pass"],
    ["test_health_and_concepts, test_frontend_and_sample_endpoints", "API health, concepts and the web page", "Pass"],
    ["test_analyze_and_recommend", "API analysis and recommendations", "Pass"],
+   ["test_study_material_pdf", "Study-material PDF for all gaps and for one concept", "Pass"],
    ["test_evaluation_flow", "API evaluation session; answers are not leaked", "Pass"],
    ["test_results_upload", "CSV upload, including a rejected invalid file", "Pass"],
    ["test_evaluation_records_feed_back", "Evaluation answers can be re-analysed", "Pass"]], [0.42, 0.48, 0.10], font=8.5)
@@ -875,7 +938,12 @@ T("Problems found during development and how they were solved", ["Problem observ
    ["Unrelated questions appeared in the bank", "The experiment and the demo wrote to the same question file at the same time", "Give experiments their own isolated question memory"],
    ["Very slow runs when API keys had no credit", "Every call waited for a failing network request", "Switch a provider off after an account-level error"],
    ["Gemini returned \"model not found\"", "Google retired gemini-1.5-flash", "Updated the model name in config.yaml"],
-   ["The first request of the web app was slow", "Loading the embedding model takes about a minute", "Load all models once at server start-up"]],
+   ["The first request of the web app was slow", "Loading the embedding model takes about a minute", "Load all models once at server start-up"],
+   ["Paid APIs could not be used", "OpenAI and DeepSeek accounts had no credit", "Moved to free providers: Groq generates, OpenRouter and Gemini verify"],
+   ["Gemini answered 429 and 503 errors", "Free-tier request limits and overloaded servers", "Request pacing, waiting with the server's suggested delay, and retries"],
+   ["Groq and OpenRouter answered \"model does not exist\" or \"not free\" (404)", "Free model names are retired or become paid", "Updated the model names and added python -m plrs models to list valid names"],
+   ["The test suite was slow and used API quota", "Two new keys (Groq, OpenRouter) were not blanked in the tests", "Blank every provider key in the test set-up"],
+   ["Learners did not notice the PDF download button", "It was placed below all the recommendations", "Moved it to the top, added an in-page PDF viewer and a button in every recommendation"]],
   [0.33, 0.33, 0.34], font=8.5)
 
 # ============================================================================ Chapter 8
@@ -917,9 +985,10 @@ P(f"""EKT outperforms DKT on every metric: test AUC {f3(e['test_auc'])} against 
 of each question, which confirms the value of exercise awareness reported in [2] and [1]. The small gap between
 training and test AUC shows that the model is not overfitting after 12 epochs.""")
 H2("8.3", "Question Generation Results")
-NOTE("""All question-generation runs reported here used the offline mock generator. During this project the
-available OpenAI and DeepSeek accounts had no remaining credit and the configured Gemini model had been retired,
-so the real models could not be evaluated. The mock builds questions from curriculum sentences; its purpose is to
+NOTE("""All question-generation runs reported here used the offline mock generator. When these experiments were
+run, the available OpenAI and DeepSeek accounts had no remaining credit and the configured Gemini model had been
+retired, so the real models could not be evaluated. The system now runs on free providers (Groq, OpenRouter,
+Gemini), so the experiment can be repeated with real models (python -m plrs experiments). The mock builds questions from curriculum sentences; its purpose is to
 test the pipeline (retrieval, de-duplication, verification, storage), not to measure question quality.""", "warn")
 qrows = []
 for name, v in MCQ.items():
@@ -992,6 +1061,9 @@ exercise-aware knowledge tracing is more accurate than DKT. Second, the integrat
 detected, remediation and new questions are generated, the adaptive test measures progress and the knowledge state
 is updated until the target is reached. Third, the statistical before/after analysis can be carried out
 automatically. Absolute values differ from the paper because of the data and the unavailable AI models.""")
+P("""Beyond the paper, the study-material PDF turns each recommendation into something the learner can keep: only
+their weak concepts, the questions they missed and the matching syllabus pages, in study order. Because it reuses
+the recommendations already generated, it adds no cost and works with every provider, including the offline mock.""")
 
 # ============================================================================ Chapter 9
 H1("Advantages, Limitations and Future Scope")
@@ -1003,23 +1075,28 @@ B(["**Personalized learning:** each learner receives plans and questions only fo
    "**Continuous assessment:** the knowledge state is updated after every round.",
    "**Reduced manual effort** for teachers, who only review concepts and flagged items.",
    "**Aligned with OBE:** every decision uses the institution's threshold and target.",
-   "**Robust and reproducible:** works offline, fixed seeds, 30 automated tests."])
+   "**Study material to keep:** a personal PDF with the learner's gaps, missed questions, plan and syllabus pages.",
+   "**Free to run:** uses the free tiers of Groq, OpenRouter and Gemini, with pacing and automatic fallback.",
+   "**Robust and reproducible:** works offline, fixed seeds, 36 automated tests."])
 H2("9.2", "Limitations")
 B(["The evaluation uses synthetic data, not real institutional learner data.",
    "Only EKT and DKT are implemented; the paper also compares DKVMN, AKT and SimpleKT.",
-   """Real LLM output could not be evaluated because the available API accounts had no credit; the offline mock
-    produces low-quality questions.""",
+   """The reported question-quality results were produced with the offline mock, which writes low-quality
+    questions; they have not yet been re-measured with the free models.""",
    "LLM-generated questions and plans may contain errors; teacher review of flagged items remains necessary.",
    "Quality depends on the uploaded course material and on the embedding model.",
    """EKT requires enough learner interaction data; with very few answers per concept, mastery stays near the class
     average.""",
-   "AI API usage has a cost per request.",
+   """Free AI tiers limit the number of requests per minute and per day, and free model names change, so the
+    configuration must be updated from time to time.""",
    "There is no user login or relational database; the prototype stores data in files.",
    "Only multiple-choice questions are generated; descriptive answers are not graded.",
    "Student data must be protected; privacy and algorithmic bias need attention in a real deployment [29]."])
 H2("9.3", "Future Scope")
 B(["Evaluate with real OBE data and real pre- and post-tests from a live batch.",
-   "Run the question generator with real OpenAI, Gemini and DeepSeek models and measure question quality.",
+   """Re-run the question-quality experiment with the free Groq, OpenRouter and Gemini models and with the paper's
+    paid models, and compare them.""",
+   "Mistake-aware remediation that uses the wrong option a learner chose, and study material in regional languages.",
    "Implement the other knowledge-tracing baselines (DKVMN, AKT, SimpleKT).",
    "Add user accounts, a relational database and a teacher dashboard with review of flagged questions.",
    "Integrate with existing LMS platforms such as Moodle.",
@@ -1037,7 +1114,8 @@ curriculum with Retrieval-Augmented Generation, traces each learner's knowledge 
 Tracing model, identifies knowledge gaps with the OBE threshold and target, generates cross-verified remedial
 recommendations and new questions, and re-assesses the learner with an adaptive test in a continuous loop.""")
 P(f"""The implementation is a complete Python system with a web frontend, a REST API, a command-line interface and
-30 passing automated tests. On synthetic data for a C programming course, EKT achieved a test AUC of
+36 passing automated tests, and it runs on free AI services. Every learner can also keep a personal
+study-material PDF for their weak concepts. On synthetic data for a C programming course, EKT achieved a test AUC of
 {f3(e['test_auc'])} compared with {f3(dk['test_auc'])} for DKT; a learner with five knowledge gaps reached the target
 on all concepts after one round of remediation; and a simulated before/after study showed higher scores on all five
 concepts. The project demonstrates that concept-centric evaluation combined with generative AI can provide
@@ -1076,9 +1154,9 @@ refs = [
     'N. Tang, C. Yang, J. Fan, L. Cao, Y. Luo and A. Halevy, "VerifAI: Verified generative AI," arXiv:2307.02796, 2023.',
     'M. Bond et al., "A meta systematic review of artificial intelligence in higher education: A call for increased ethics, collaboration, and rigour," International Journal of Educational Technology in Higher Education, vol. 21, no. 1, 2024.',
     'O. Zawacki-Richter, V. I. Marin, M. Bond and F. Gouverneur, "Systematic review of research on artificial intelligence applications in higher education - where are the educators?," International Journal of Educational Technology in Higher Education, vol. 16, 2019.',
-    'FastAPI documentation, https://fastapi.tiangolo.com; sentence-transformers documentation, https://www.sbert.net; pypdf documentation, https://pypdf.readthedocs.io.',
+    'FastAPI documentation, https://fastapi.tiangolo.com; sentence-transformers documentation, https://www.sbert.net; pypdf documentation, https://pypdf.readthedocs.io; ReportLab documentation, https://docs.reportlab.com.',
     'S. Webb, J. Holford, S. Hodge, M. Milana and R. Waller, "Lifelong learning for quality education: Exploring the neglected aspect of Sustainable Development Goal 4," International Journal of Lifelong Education, vol. 36, no. 5, pp. 509-511, 2017.',
-    'OpenAI API documentation, https://platform.openai.com/docs; Google Gemini API documentation, https://ai.google.dev; DeepSeek API documentation, https://api-docs.deepseek.com.',
+    'Groq API documentation, https://console.groq.com/docs; OpenRouter documentation, https://openrouter.ai/docs; Google Gemini API documentation, https://ai.google.dev; OpenAI API documentation, https://platform.openai.com/docs; DeepSeek API documentation, https://api-docs.deepseek.com.',
 ]
 add(t="references", items=refs)
 
@@ -1103,7 +1181,7 @@ CODE("""You are reviewing an assessment item for the concept "<concept>" at diff
 Rate from 1 (unusable) to 5 (excellent) how well it matches the concept, difficulty and Bloom's level, and
 whether the marked answer is correct and unambiguous.
 Return JSON: {"score": int, "bloom_level_ok": bool, "difficulty_ok": bool, "feedback": str}""",
-     "A.2 Question verification prompt (sent to Gemini and DeepSeek)")
+     "A.2 Question verification prompt (sent to the verifier models)")
 CODE("""Generate a structured remedial recommendation for the concept "<concept>" for a learner who demonstrates
 <mastery>% concept mastery. The response should include five sections: Learning Objectives, Recommended Topics
 to Revise, Remedial Explanation, Two Practice Activities and Concept Gap Rationale, which will describe the
@@ -1178,14 +1256,29 @@ Response 200
     ...
   ]
 }""", "E.1 Knowledge-gap analysis (values illustrative)")
+CODE("""POST /materials/pdf
+{
+  "learner_id": "CSE230001",
+  "concepts": [ ...the "concepts" list returned by /analyze... ],
+  "recommendations": [ ...the "recommendation" objects returned by /recommend... ],
+  "only": null                    (or one concept name for a single-concept PDF)
+}
+
+Response 200
+Content-Type: application/pdf
+Content-Disposition: inline; filename="study_material_CSE230001.pdf"
+(the PDF file)""", "E.2 Study-material PDF")
 
 add(t="h2", text="Appendix F: Configuration File (config.yaml)")
-CODE(config_text.strip())
+_cfg_lines = config_text.strip().splitlines()
+_cut = next(i for i, l in enumerate(_cfg_lines) if l.startswith("rag:"))
+CODE("\n".join(_cfg_lines[:_cut]).strip(), "F.1 AI models (llm section)")
+CODE("\n".join(_cfg_lines[_cut:]).strip(), "F.2 RAG, OBE, questions, evaluation and knowledge tracing")
 
 add(t="h2", text="Appendix G: Test Execution Output")
 CODE("""$ python -m pytest -q
-..............................                                           [100%]
-30 passed""")
+....................................                                     [100%]
+36 passed""")
 
 add(t="h2", text="Appendix H: Learner Questionnaire")
 P("""Questionnaire for a future learner evaluation, based on Table 7 of the paper [1]. Each statement is rated on a
@@ -1211,14 +1304,18 @@ python -m venv .venv
 .venv\\Scripts\\activate            (macOS/Linux: source .venv/bin/activate)
 pip install -r requirements.txt
 
-# 2. Optional: real AI models - copy the template and add your keys
+# 2. Optional: real AI models - copy the template and add your free keys
 copy .env.example .env             (then edit .env; never commit it)
+#    GROQ_API_KEY, OPENROUTER_API_KEY, GEMINI_API_KEY (all have free tiers)
+python -m plrs models              (check that the configured model names are available)
 
 # 3. Run everything end to end
 python -m plrs demo
 
 # 4. Start the web application
 python -m plrs serve               then open http://127.0.0.1:8000/
+                                   (Upload CSV: try the files in sample_uploads/;
+                                    after the recommendations: View study material / Download PDF)
 
 # 5. Use your own data
 python -m plrs ingest path/to/curriculum.pdf     (review data/store/concepts.json)

@@ -113,7 +113,7 @@ def proposed_system():
         ("Course PDF", "curriculum uploaded by teacher"), ("PDF processing", "text extraction (pypdf)"),
         ("Concept extraction", "one concept per unit (LLM)"), ("RAG vector database", "chunks + embeddings"),
         ("OBE exam results / answers", "marks per question"), ("Knowledge tracing (EKT)", "mastery per concept"),
-        ("Identify weak concepts", "mastery < 70% target"), ("Remedial recommendation", "5-part plan, cross-verified"),
+        ("Identify weak concepts", "mastery < 70% target"), ("Remedial recommendation", "5-part plan + study PDF"),
         ("Question generation (RAG)", "new concept MCQs"), ("Adaptive re-test", "Easy > Medium > Hard"),
         ("Updated knowledge state", "progress report")],
         w=7.0, highlight=(5, 7), loop=(9, 5, "answers fed back"))
@@ -127,9 +127,9 @@ def architecture():
                               ("Command line", "cli.py")], 49),
               ("Orchestration", [("Personalized learning pipeline", "pipeline.py - Algorithm 1 loop")], 36),
               ("Modules", [("Curriculum RAG", "rag.py"), ("Knowledge tracing", "kt.py"), ("Gap analysis", "gap.py"),
-                           ("Remedial plans", "remedial.py"), ("MCQ generation", "qgen.py"),
+                           ("Remedial plans", "remedial.py,\nmaterials.py (PDF)"), ("MCQ generation", "qgen.py"),
                            ("Adaptive test", "evaluation.py")], 21),
-              ("Foundation", [("LLM providers", "llm.py"), ("Embeddings", "embeddings.py"), ("OBE data", "data.py"),
+              ("Foundation", [("LLM providers", "llm.py: Groq,\nOpenRouter, Gemini"), ("Embeddings", "embeddings.py"), ("OBE data", "data.py"),
                               ("Metrics", "metrics.py"), ("Settings", "config.yaml")], 6)]
     for label, items, y in layers:
         d.ax.text(1, y + 11.5, label.upper(), fontsize=9, fontweight="bold", color=GREY)
@@ -186,8 +186,8 @@ def ekt_model():
 def remedial_flow():
     d = Diagram(9.6, 3.6)
     items = [("Weak concept", "mastery + attempts"), ("Retrieve context", "concept's unit (RAG)"),
-             ("Generate plan", "OpenAI, 5 sections"), ("Cross-verify", "Gemini + DeepSeek, 1-5"),
-             ("Deliver to learner", "markdown / web page")]
+             ("Generate plan", "Groq, 5 sections"), ("Cross-verify", "OpenRouter + Gemini, 1-5"),
+             ("Deliver to learner", "web page + study PDF")]
     bw, gap = 16.6, 2.8
     for i, (t, s) in enumerate(items):
         d.box(i, 1 + i * (bw + gap), 17, bw, 11, t, s, fill=SOFT if i == 3 else "white",

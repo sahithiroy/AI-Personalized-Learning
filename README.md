@@ -115,11 +115,15 @@ Wait for `Ready: open http://127.0.0.1:8000/`. Loading the models takes about a 
 **http://127.0.0.1:8000/** in your browser. The page walks through the same loop as the paper:
 
 1. **Learner exam results.** Pick a sample learner, upload an OBE results CSV (same columns as
-   `data/sample/current_batch.csv`), or type the questions and marks yourself. Every row can be edited.
+   `data/sample/current_batch.csv`; ready-made examples are in `sample_uploads/`), or type the questions and marks
+   yourself. Every row can be edited.
 2. **Analyse & get recommendations.** Shows the EKT mastery for each concept as a bar with the OBE threshold and
    target marked, the level (Beginner / Intermediate / Expert) and whether it is a knowledge gap.
 3. **Remedial recommendations.** One expandable plan per weak concept: learning objectives, topics to revise,
-   explanation, practice activities, and why it was recommended.
+   explanation, practice activities, and why it was recommended. At the top, **View study material** opens a
+   personal PDF inside the page and **Download PDF** saves it: the learner's weak concepts (weakest first), the
+   questions they got wrong, the plan, the matching syllabus pages and a self-check list. Each plan also has a button
+   for a PDF of that concept only. The PDF reuses the recommendations on screen, so it makes no extra AI calls.
 4. **Self-assessment.** An adaptive test on the weak concepts (Easy → Medium → Hard, using a rule like `5 and 80`).
    After you submit a level, the right and wrong answers are shown with explanations.
 5. **Update my knowledge state → next round.** Your answers are added to your history, EKT re-traces your
@@ -294,7 +298,10 @@ config.yaml                 all parameters
 data/sample/                sample curriculum (+ generated CSVs)
 data/store/                 vector DB, concepts.json, question_bank.json, learner reports   (generated)
 data/models/                ekt.pt / dkt.pt, kt_history.csv, experiments.json               (generated)
-docs/                       Project_Report.pdf / .docx (final-year report), report_source/ (scripts that build it)
+docs/                       Project_Report.pdf / .docx (final-year report), report_source/ (scripts that build it),
+                            Project_Step_by_Step_Guide.pdf (plain-language guide and review Q&A)
+PPTS/                       First and Final Review slide decks
+sample_uploads/             example OBE result CSVs for the web upload, and an example study-material PDF
 plrs/                       the package (see section 7)
 plrs/static/index.html      web frontend (plain HTML + JavaScript, no build step)
 tests/                      pytest suite
@@ -315,14 +322,15 @@ artifact, retrieval purity, and a 40-learner closed-loop simulation. `docs/paper
 produced it, and `paper_results.json` holds the raw numbers.
 
 All result numbers in the report are read from this project's own output files. `docs/report_source/` holds the scripts
-that rebuild it after new experiments: `make_figures.py` (charts and diagrams), `make_screens.py` (screenshots of the
+that rebuild it after new experiments: `make_figures.py` (charts and diagrams), `make_screens.py` and `make_screens_materials.py` (screenshots of the
 running web app), `content.py` (the text), `render_pdf.py` and `render_docx.js`.
 
 ## 13. Limitations
 
 - Only **EKT and DKT** are implemented. The paper also compares DKVMN, AKT and SimpleKT.
 - The **mock provider** builds questions and recommendations from sentences in the curriculum. It is useful for
-  testing the pipeline offline, but the content quality depends on real models (OpenAI, Gemini, DeepSeek).
+  testing the pipeline offline, but the content quality depends on real models (Groq, OpenRouter and Gemini by
+  default; OpenAI or DeepSeek optionally).
 - The bundled data is **synthetic** (IRT-simulated learners), not the AMPLE LMS data used in the paper.
 - The mock verifiers apply structural checks only. Real pedagogical verification needs the Gemini and DeepSeek keys,
   plus instructor review of flagged items, as the paper recommends.
